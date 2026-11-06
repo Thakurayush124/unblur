@@ -113,9 +113,10 @@ export function createApp(store: DataStore, opts: AppOptions = {}) {
   app.use("/api", api);
   app.use("/api", (_req, _res, next) => next(new HttpError(404, "not found")));
 
-  if (opts.webDist && existsSync(opts.webDist)) {
-    app.use(express.static(opts.webDist, { maxAge: "1h", index: false }));
-    app.get("/{*splat}", (_req, res) => res.sendFile(path.join(opts.webDist!, "index.html")));
+  const webDist = opts.webDist ? path.resolve(opts.webDist) : null; // sendFile needs an absolute path
+  if (webDist && existsSync(webDist)) {
+    app.use(express.static(webDist, { maxAge: "1h", index: false }));
+    app.get("/{*splat}", (_req, res) => res.sendFile(path.join(webDist, "index.html")));
   }
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

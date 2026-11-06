@@ -158,3 +158,22 @@ describe("HTTP API (JSON store)", () => {
     expect((await get("/repos/r_demo/overview")).body.comprehension).toBe(40);
   });
 });
+
+describe("static dashboard", () => {
+  it("serves index.html for client routes from a relative webDist", async () => {
+    const web = await mkdtemp(path.join(os.tmpdir(), "grasp-web-"));
+    await writeFile(path.join(web, "index.html"), "<!doctype html><title>grasp</title>");
+    const rel = path.relative(process.cwd(), web);
+    const s = createApp(new JsonStore(dir), { webDist: rel }).listen(0);
+    try {
+      const url = `http://127.0.0.1:${(s.address() as AddressInfo).port}`;
+      const res = await fetch(`${url}/some/client/route`);
+      expect(res.status).toBe(200);
+      expect(await res.text()).toContain("<title>grasp</title>");
+      expect((await fetch(`${url}/api/nope`)).status).toBe(404);
+    } finally {
+      await new Promise((r) => s.close(r));
+      await rm(web, { recursive: true, force: true });
+    }
+  });
+});
