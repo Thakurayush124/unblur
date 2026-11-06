@@ -85,7 +85,8 @@ def main(argv: list[str] | None = None) -> int:
     a.add_argument("--full", action="store_true", help="ignore previous results; re-analyse")
     a.add_argument("--as-of", help="ISO timestamp used as 'now' (for reproducible runs)")
     a.add_argument("--top", type=int, default=10)
-    a.add_argument("--pr-data", help="JSON list of PullRequest docs (enables signal R locally)")
+    a.add_argument("--pr-data", help="JSON list of PullRequest docs (enables signal R)")
+    a.add_argument("--github-installation-id", type=int, help="mark the repo as GitHub App-managed")
     args = ap.parse_args(argv)
 
     try:
@@ -137,9 +138,10 @@ def _analyze(args: argparse.Namespace) -> int:
             previous = mongo.load(args.mongo_url, repo_path, args.mongo_db)
 
     prs = None
-    if args.pr_data:
+    if args.pr_data and Path(args.pr_data).is_file():
         raw = json.loads(Path(args.pr_data).read_text(encoding="utf-8"))
         prs = [PullRequest.model_validate(p) for p in raw]
+        _progress(f"Loaded {len(prs)} pull requests")
 
     result = analyze(
         repo_path,
@@ -150,6 +152,7 @@ def _analyze(args: argparse.Namespace) -> int:
         pull_requests=prs,
         remote_url=remote_url,
         progress=_progress,
+        github_installation_id=args.github_installation_id,
     )
     _progress("Saving results")
     if json_out:

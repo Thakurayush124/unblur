@@ -209,3 +209,67 @@ def test_cli_pr_data_and_summary(tmp_path: Path, capsys: pytest.CaptureFixture[s
     billing = next(f for f in data["fileScores"] if f["path"] == "src/billing/proration.py")
     assert billing["signals"]["reviewDataAvailable"] is True
     assert "0-comment approval" in billing["explanation"]
+
+
+def test_cli_github_mode_with_squash_merge_pr_data(tmp_path: Path) -> None:
+    """PR data as the API's GitHub backfill writes it: logins as ids, squash merge commit sha."""
+    import json
+
+    import cli
+
+    r = FixtureRepo(tmp_path / "gh")
+    sha = r.commit(
+        f"Add auth (#7)\n\n{CLAUDE}",
+        {"src/auth/login.py": lines("ai", 300)},
+        author=CAROL,
+        date="2026-10-01T00:00:00+00:00",
+    )
+    prs = tmp_path / "prs.json"
+    prs.write_text(
+        json.dumps(
+            [
+                {
+                    "repoId": "",
+                    "number": 7,
+                    "authorId": "carol",
+                    "openedAt": "2026-09-30T10:00:00Z",
+                    "mergedAt": "2026-10-01T00:00:00Z",
+                    "additions": 300,
+                    "deletions": 0,
+                    "labels": [],
+                    "commitShas": ["0" * 40, sha],
+                    "timeToFirstReviewMins": 3,
+                    "reviews": [
+                        {
+                            "reviewerId": "alice",
+                            "state": "APPROVED",
+                            "submittedAt": "2026-09-30T10:03:00Z",
+                            "commentCount": 0,
+                            "bodyLength": 0,
+                        }
+                    ],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "out.json"
+    argv = [
+        "analyze",
+        str(r.path),
+        "--json",
+        str(out),
+        "--pr-data",
+        str(prs),
+        "--github-installation-id",
+        "42",
+        "--as-of",
+        AS_OF.isoformat(),
+    ]
+    assert cli.main(argv) == 0
+    data = json.loads(out.read_text(encoding="utf-8"))
+    assert data["repo"]["source"] == "github" and data["repo"]["githubInstallationId"] == 42
+    f = next(f for f in data["fileScores"] if f["path"] == "src/auth/login.py")
+    assert f["reviewDepth"] == 0.1 and "0-comment approval" in f["explanation"]
+    # a missing PR file (first run before backfill finishes) is not an error
+    assert cli.main([*argv[:5], str(tmp_path / "nope.json"), *argv[6:]]) == 0

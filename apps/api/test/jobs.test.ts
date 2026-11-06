@@ -151,11 +151,34 @@ describe("analysis jobs", () => {
     expect((await fetch(`${base}/jobs/not-a-uuid`)).status).toBe(400);
   });
 
-  it("merges duplicate submissions while a job is pending", () => {
+  it("merges duplicates while queued, but queues a follow-up behind a running job", () => {
     const q = new JobQueue({ cliPath: "c", python: "p", workdir: "w", runner: () => new Promise(() => {}) });
-    const a = q.submit("https://github.com/a/b");
-    const b = q.submit("https://github.com/a/b");
-    expect(b.id).toBe(a.id);
+    const running = q.submit("https://github.com/a/b");
+    expect(running.status).toBe("running");
+    const followUp = q.submit("https://github.com/a/b");
+    expect(followUp.id).not.toBe(running.id);
+    expect(q.submit("https://github.com/a/b", { full: true }).id).toBe(followUp.id);
+    expect(followUp.full).toBe(true);
+  });
+
+  it("passes per-job args and lazily resolved env to the runner", async () => {
+    const seen: { args: string[]; env?: Record<string, string> }[] = [];
+    const q = new JobQueue({
+      cliPath: "c",
+      python: "p",
+      workdir: "w",
+      runner: async (args, _l, _s, env) => {
+        seen.push({ args, env });
+        return { code: 0 };
+      },
+    });
+    q.submit("https://github.com/a/b", {
+      extraArgs: ["--pr-data", "prs.json"],
+      env: async () => ({ GIT_CONFIG_COUNT: "1" }),
+    });
+    await q.idle();
+    expect(seen[0]!.args).toContain("--pr-data");
+    expect(seen[0]!.env).toEqual({ GIT_CONFIG_COUNT: "1" });
   });
 });
 

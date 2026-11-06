@@ -62,6 +62,11 @@ export default function App() {
     setRepoId(id);
   }, []);
   const reloadRepos = useCallback(() => setReposVersion((v) => v + 1), []);
+  // Deep links from GitHub checks/comments carry ?repo=<id>.
+  const linkedRepo = route.params.get("repo");
+  useEffect(() => {
+    if (linkedRepo) selectRepo(linkedRepo);
+  }, [linkedRepo, selectRepo]);
   const refresh = useCallback(() => {
     setVersion((v) => v + 1);
     setReposVersion((v) => v + 1);

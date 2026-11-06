@@ -85,6 +85,7 @@ def analyze(
     env: Mapping[str, str] | None = None,
     remote_url: str | None = None,
     progress: Callable[[str], None] | None = None,
+    github_installation_id: int | None = None,
 ) -> AnalysisResult:
     t0 = time.perf_counter()
     say = progress or (lambda _msg: None)
@@ -305,7 +306,8 @@ def analyze(
         repo=Repo(
             _id=rid,
             name=display_name(remote_url) if remote_url else repo.name,
-            source="local",
+            source="github" if github_installation_id else "local",
+            github_installation_id=github_installation_id,
             path=repo.as_posix(),
             remote_url=remote_url,
             default_branch=current_branch(repo),

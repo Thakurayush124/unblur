@@ -32,6 +32,7 @@ export type Runner = (
   args: string[],
   onLine: (line: string) => void,
   signal: AbortSignal,
+  env?: Record<string, string>,
 ) => Promise<RunResult>;
 
 export interface JobOptions {
@@ -55,12 +56,18 @@ export function isRemote(source: string): boolean {
 }
 
 export function processRunner(python: string): Runner {
-  return (args, onLine, signal) =>
+  return (args, onLine, signal, extraEnv) =>
     new Promise((resolve) => {
       const child = spawn(python, args, {
         shell: false,
         windowsHide: true,
-        env: { ...process.env, PYTHONUNBUFFERED: "1", PYTHONIOENCODING: "utf-8", GIT_TERMINAL_PROMPT: "0" },
+        env: {
+          ...process.env,
+          ...extraEnv,
+          PYTHONUNBUFFERED: "1",
+          PYTHONIOENCODING: "utf-8",
+          GIT_TERMINAL_PROMPT: "0",
+        },
       });
       const split = (buf: Buffer) => buf.toString("utf-8").split(/\r?\n/).filter(Boolean).forEach(onLine);
       child.stdout.on("data", split);
@@ -78,9 +85,25 @@ export function processRunner(python: string): Runner {
     });
 }
 
+interface QueueItem {
+  job: Job;
+  out: string | null;
+  extraArgs: string[];
+  /** Resolved right before the job runs (e.g. a fresh GitHub installation token). */
+  env?: () => Promise<Record<string, string>>;
+}
+
+export interface SubmitOptions {
+  full?: boolean;
+  /** Pin the output JSON file (re-analysis of a known repo). */
+  out?: string | null;
+  extraArgs?: string[];
+  env?: () => Promise<Record<string, string>>;
+}
+
 export class JobQueue {
   private jobs = new Map<string, Job>();
-  private queue: { job: Job; out: string | null }[] = [];
+  private queue: QueueItem[] = [];
   private running = false;
   private readonly runner: Runner;
 
@@ -91,12 +114,16 @@ export class JobQueue {
     this.runner = opts.runner ?? processRunner(opts.python);
   }
 
-  /** Queue an analysis. `out` pins the output JSON file (re-analysis of a known repo). */
-  submit(source: string, { full = false, out = null }: { full?: boolean; out?: string | null } = {}): Job {
-    const existing = [...this.jobs.values()].find(
-      (j) => j.source === source && (j.status === "queued" || j.status === "running"),
-    );
-    if (existing) return existing;
+  /**
+   * Queue an analysis. A submission for a source that is already *queued* is merged into it;
+   * one that is already *running* queues a follow-up so commits pushed meanwhile are not missed.
+   */
+  submit(source: string, { full = false, out = null, extraArgs = [], env }: SubmitOptions = {}): Job {
+    const queued = this.queue.find((q) => q.job.source === source);
+    if (queued) {
+      queued.job.full ||= full;
+      return queued.job;
+    }
     const job: Job = {
       id: randomUUID(),
       source,
@@ -111,7 +138,7 @@ export class JobQueue {
       error: null,
     };
     this.jobs.set(job.id, job);
-    this.queue.push({ job, out });
+    this.queue.push({ job, out, extraArgs, env });
     this.prune();
     void this.pump();
     return job;
@@ -130,8 +157,17 @@ export class JobQueue {
     while (this.running || this.queue.length) await new Promise((r) => setTimeout(r, 10));
   }
 
-  private args(job: Job, out: string | null): string[] {
-    const a = [this.opts.cliPath, "analyze", job.source, "--workdir", this.opts.workdir, "--top", "0"];
+  private args({ job, out, extraArgs }: QueueItem): string[] {
+    const a = [
+      this.opts.cliPath,
+      "analyze",
+      job.source,
+      "--workdir",
+      this.opts.workdir,
+      "--top",
+      "0",
+      ...extraArgs,
+    ];
     if (out) a.push("--json", out);
     else if (this.opts.dataDir) a.push("--data-dir", this.opts.dataDir);
     else if (this.opts.mongoUrl)
@@ -145,15 +181,16 @@ export class JobQueue {
     const next = this.queue.shift();
     if (!next) return;
     this.running = true;
-    const { job, out } = next;
+    const { job } = next;
     job.status = "running";
     job.startedAt = new Date().toISOString();
     job.progress = "Starting";
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), this.opts.timeoutMs ?? 30 * 60_000);
     try {
+      const env = next.env ? await next.env() : undefined;
       const { code } = await this.runner(
-        this.args(job, out),
+        this.args(next),
         (line) => {
           job.log.push(line);
           if (job.log.length > LOG_LINES) job.log.shift();
@@ -164,6 +201,7 @@ export class JobQueue {
           else job.progress = m[1]!;
         },
         ctrl.signal,
+        env,
       );
       if (code === 0) {
         job.status = "succeeded";
@@ -174,6 +212,9 @@ export class JobQueue {
           ? "timed out"
           : ([...job.log].reverse().find((l) => /error|fatal/i.test(l)) ?? `worker exited with code ${code}`);
       }
+    } catch (e) {
+      job.status = "failed";
+      job.error = e instanceof Error ? e.message : String(e);
     } finally {
       clearTimeout(timer);
       job.finishedAt = new Date().toISOString();

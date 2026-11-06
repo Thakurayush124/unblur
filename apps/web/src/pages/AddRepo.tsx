@@ -20,6 +20,9 @@ export default function AddRepoPage() {
       <Load state={caps}>
         {(c) => (c.addRepos ? <AddForm caps={c} /> : <Notice tone="warn">{c.reason}</Notice>)}
       </Load>
+      <div className="mt-6">
+        <GitHubPanel />
+      </div>
     </>
   );
 }
@@ -147,5 +150,58 @@ function AddForm({ caps }: { caps: Capabilities }) {
         }
       </Load>
     </div>
+  );
+}
+
+interface GitHubStatus {
+  configured: boolean;
+  appId: string | null;
+  events: { at: string; event: string; action: string | null; repo: string | null; outcome: string }[];
+}
+
+/** GitHub App status: real review data (signal R) and the PR comprehension check. */
+function GitHubPanel() {
+  const status = useApi<GitHubStatus>("/github/status");
+  return (
+    <Load state={status}>
+      {(s) => (
+        <Card title="GitHub App" id="gh-h">
+          {s.configured ? (
+            <>
+              <p className="text-sm text-ink-2">
+                Connected as App <code>{s.appId}</code>. Installing it on a repository backfills merged PRs
+                and reviews, analyses the repo, and adds the <strong>Grasp: comprehension check</strong> to
+                PRs that touch high-risk files.
+              </p>
+              {s.events.length > 0 ? (
+                <ul className="mt-3 divide-y divide-line text-sm">
+                  {s.events.slice(0, 8).map((e, i) => (
+                    <li key={`${e.at}-${i}`} className="flex flex-wrap gap-x-3 py-1.5">
+                      <code className="text-xs">
+                        {e.event}
+                        {e.action ? `.${e.action}` : ""}
+                      </code>
+                      {e.repo && <span className="font-mono text-xs text-muted">{e.repo}</span>}
+                      <span className={e.outcome.startsWith("error") ? "text-critical" : "text-ink-2"}>
+                        {e.outcome}
+                      </span>
+                      <span className="ml-auto text-xs text-muted">{ago(e.at)}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2 text-sm text-muted">No webhook deliveries yet.</p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-ink-2">
+              Not connected. Repos added here have no review data (review depth R stays neutral). To get real
+              review data and the PR comprehension check, create the GitHub App described in{" "}
+              <code>docs/github-app.md</code>.
+            </p>
+          )}
+        </Card>
+      )}
+    </Load>
   );
 }

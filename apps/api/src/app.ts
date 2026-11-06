@@ -3,6 +3,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 
+import { verifyWebhookSignature } from "./github/client.js";
+import type { GitHubIntegration } from "./github/integration.js";
 import { isRemote, normalisePath, type JobQueue } from "./jobs.js";
 import { effectiveSettings, SettingsSchema } from "./settings.js";
 import type { DataStore } from "./store/index.js";
@@ -40,6 +42,9 @@ export interface AppOptions {
   allowLocalPaths?: boolean;
   /** Why adding new repos is unavailable even though re-analysis works (e.g. single-file JSON). */
   addDisabledReason?: string;
+  /** GitHub App integration (webhooks + PR guard). */
+  github?: GitHubIntegration;
+  webhookSecret?: string;
 }
 
 const AddRepoBody = z.object({
@@ -51,6 +56,29 @@ const AnalyzeBody = z.object({ full: z.boolean().optional() }).default({});
 export function createApp(store: DataStore, opts: AppOptions = {}) {
   const app = express();
   app.disable("x-powered-by");
+
+  // GitHub webhooks: verify the HMAC over the *raw* body before parsing anything.
+  app.post("/api/github/webhook", express.raw({ type: "*/*", limit: "25mb" }), (req, res) => {
+    if (!opts.github || !opts.webhookSecret) {
+      res.status(404).json({ error: "GitHub App integration is not configured" });
+      return;
+    }
+    const raw = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    if (!verifyWebhookSignature(raw, req.get("x-hub-signature-256"), opts.webhookSecret)) {
+      res.status(401).json({ error: "invalid signature" });
+      return;
+    }
+    let payload: Record<string, unknown>;
+    try {
+      payload = JSON.parse(raw.toString("utf-8")) as Record<string, unknown>;
+    } catch {
+      res.status(400).json({ error: "invalid JSON" });
+      return;
+    }
+    opts.github.handle(req.get("x-github-event") ?? "", req.get("x-github-delivery") ?? "", payload);
+    res.status(202).json({ accepted: true });
+  });
+
   app.use(express.json({ limit: "256kb" }));
 
   async function repoData(req: Request): Promise<RepoData> {
@@ -101,6 +129,15 @@ export function createApp(store: DataStore, opts: AppOptions = {}) {
       throw new HttpError(400, `Not a git checkout: ${abs} (expected a folder containing .git)`);
     return abs;
   }
+
+  api.get("/github/status", (_req, res) => {
+    const gh = opts.github;
+    res.json({
+      configured: Boolean(gh),
+      appId: gh?.appId ?? null,
+      events: gh?.events.slice(0, 20) ?? [],
+    });
+  });
 
   api.get("/capabilities", (_req, res) => {
     res.json({

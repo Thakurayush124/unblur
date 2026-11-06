@@ -17,7 +17,7 @@ Grasp measures **team understanding of code, not code quality**. It answers thre
 | 1 | Local CLI ingestion: git log + blame, AI detection, AI line share | ✅ done |
 | 2 | Signals (review, human touch, retention), scoring, criticality, snapshots | ✅ done |
 | 3 | Dashboard (overview, heatmap, file detail, people, settings) | ✅ done |
-| 4 | GitHub App + PR comprehension check | ⏳ |
+| 4 | GitHub App: PR/review backfill, PR comprehension check, recompute on merge | ✅ built, tested against a fake GitHub; [setup + sandbox checklist](docs/github-app.md) |
 | 5 | Walkthroughs + quizzes (opt-in LLM) | ⏳ |
 
 ## Quickstart
@@ -78,6 +78,15 @@ npm run dev:web     # Vite dev server on :5173, proxies /api
 - **Settings**: weights, AI regexes, critical paths and the LLM opt-in, validated with Zod.
 
 Light and dark themes are both supported. With 5,000 files, the overview and the heatmap each load in under 600 ms (measured by the Playwright suite).
+
+## GitHub App and PR guard
+
+Install the Grasp GitHub App on a repository and it will:
+- **backfill merged PRs and reviews** (GraphQL), so review depth (R) reflects real reviews rather than the neutral 0.5,
+- run a **"Grasp: comprehension check"** on every PR. If the PR modifies a file with risk ≥ 60, the check is `action_required` and Grasp posts *one* comment asking for a `## Why this works` section (3–5 sentences). It passes only when that section exists **and** a reviewer other than the author approves with `/grasp verified`. PRs that touch only low-risk files are never blocked,
+- **re-analyse incrementally** on merge and on pushes to the default branch.
+
+Setup takes about 10 minutes. See **[docs/github-app.md](docs/github-app.md)**.
 
 ## How AI-assisted lines are detected
 
@@ -164,5 +173,4 @@ cd worker && python -m pytest -m slow -s   # 50k-LOC worker performance test
 
 ## Roadmap
 
-- **Phase 4**: a GitHub App that backfills PR and review data (so R is real) and adds a "Grasp: comprehension check" on PRs that touch high-risk files
 - **Phase 5**: walkthroughs and quizzes (opt-in LLM) that feed the verified-understanding signal E

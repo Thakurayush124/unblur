@@ -1,8 +1,10 @@
-import { existsSync, mkdirSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { createApp } from "./app.js";
+import { GitHubClient } from "./github/client.js";
+import { GitHubIntegration } from "./github/integration.js";
 import { JobQueue } from "./jobs.js";
 import type { DataStore } from "./store/index.js";
 import { JsonStore } from "./store/jsonStore.js";
@@ -53,6 +55,32 @@ console.log(
     : "grasp api: dashboard analysis disabled",
 );
 
+// ---- GitHub App (optional) -------------------------------------------------------------
+const privateKey =
+  // Allow the PEM in a single-line env var with literal "\n" sequences.
+  env.GITHUB_PRIVATE_KEY?.replace(/\\n/g, "\n") ??
+  (env.GITHUB_PRIVATE_KEY_PATH ? readFileSync(env.GITHUB_PRIVATE_KEY_PATH, "utf-8") : undefined);
+let github: GitHubIntegration | undefined;
+if (env.GITHUB_APP_ID && privateKey && env.GITHUB_WEBHOOK_SECRET) {
+  const client = new GitHubClient({
+    appId: env.GITHUB_APP_ID,
+    privateKey,
+    webhookSecret: env.GITHUB_WEBHOOK_SECRET,
+    apiUrl: env.GITHUB_API_URL,
+    graphqlUrl: env.GITHUB_GRAPHQL_URL,
+  });
+  github = new GitHubIntegration(client, store, jobs, {
+    prDir: path.join(dataDir ?? defaultData, ".github"),
+    webUrl: env.GITHUB_WEB_URL,
+    publicUrl: env.GRASP_PUBLIC_URL,
+    minSentences: env.GRASP_GUARD_MIN_SENTENCES ? Number(env.GRASP_GUARD_MIN_SENTENCES) : undefined,
+    backfillLimit: env.GRASP_GITHUB_BACKFILL ? Number(env.GRASP_GITHUB_BACKFILL) : undefined,
+  });
+  console.log(`grasp api: GitHub App ${env.GITHUB_APP_ID} enabled (webhook: POST /api/github/webhook)`);
+} else if (env.GITHUB_APP_ID) {
+  console.warn("grasp api: GITHUB_APP_ID set but GITHUB_PRIVATE_KEY(_PATH) or GITHUB_WEBHOOK_SECRET missing");
+}
+
 const webDist = env.GRASP_WEB_DIST ?? path.join(root, "apps", "web", "dist");
 const server = createApp(store, {
   webDist,
@@ -62,6 +90,8 @@ const server = createApp(store, {
     jsonSource && !dataDir
       ? "GRASP_DATA_JSON points at a single file; point it at a directory to add repos."
       : undefined,
+  github,
+  webhookSecret: env.GITHUB_WEBHOOK_SECRET,
 }).listen(port, host, () => {
   console.log(`grasp api listening on http://${host === "0.0.0.0" ? "localhost" : host}:${port}`);
 });
