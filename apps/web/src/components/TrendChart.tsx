@@ -58,7 +58,10 @@ export function TrendChart({ trend }: { trend: Point[] }) {
               labelFormatter={(t) => date(new Date(Number(t)).toISOString())}
               formatter={(v, name) => [score(Number(v)), name]}
             />
-            <Legend wrapperStyle={{ color: "var(--ink-2)", fontSize: 13 }} />
+            <Legend
+              wrapperStyle={{ fontSize: 13 }}
+              formatter={(value) => <span style={{ color: "var(--ink-2)" }}>{value}</span>}
+            />
             {SERIES.map((s) => (
               <Line
                 key={s.key}

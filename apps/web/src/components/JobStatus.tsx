@@ -30,7 +30,7 @@ export function JobStatus({ job }: { job: Job }) {
       />
       <span>
         <span className="font-medium">{job.status === "queued" ? "Queued" : "Analysing"}</span>
-        <span className="text-ink-2"> · {job.progress}</span>
+        <span className="text-ink-2">: {job.progress}</span>
       </span>
     </div>
   );

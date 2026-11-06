@@ -18,16 +18,21 @@ export default function FileDetailPage({ path }: { path: string }) {
             title={f.path}
             sub={
               <>
-                Module{" "}
-                <a className="text-accent hover:underline" href={href("heatmap", { module: f.module })}>
+                {int(f.loc)} lines in{" "}
+                <a
+                  className="text-accent underline-offset-4 hover:underline"
+                  href={href("heatmap", { module: f.module })}
+                >
                   {f.module}
-                </a>{" "}
-                · {int(f.loc)} LOC · computed {date(f.computedAt)}
+                </a>
+                , scored {date(f.computedAt)}
               </>
             }
           />
-          <p className="mb-6 max-w-3xl rounded-lg border border-line bg-surface p-4">{f.explanation}</p>
-          <dl className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <p className="mb-10 max-w-3xl border-l-[3px] border-accent pl-4 text-xl leading-relaxed text-ink">
+            {f.explanation}
+          </p>
+          <dl className="mb-12 grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-4">
             <StatTile
               label="Risk"
               value={<RiskChip risk={f.risk ?? 0} />}
@@ -142,8 +147,8 @@ export default function FileDetailPage({ path }: { path: string }) {
                         <code className="font-mono text-xs text-muted">{s.sha.slice(0, 10)}</code>
                         <span className="font-medium">{s.summary}</span>
                         <span className="text-muted">
-                          {s.author} · {date(s.authoredAt)}
-                          {s.prNumber ? ` · PR #${s.prNumber}` : ""}
+                          {s.author}, {date(s.authoredAt)}
+                          {s.prNumber ? `, PR #${s.prNumber}` : ""}
                         </span>
                         <span className="ml-auto tabular text-ink-2">{int(s.lines)} lines</span>
                       </div>

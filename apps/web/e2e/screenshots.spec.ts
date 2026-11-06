@@ -9,6 +9,8 @@ const shots: [string, string, "light" | "dark"][] = [
   ["heatmap", "/#/heatmap", "dark"],
   ["file-detail", "/#/file?path=src%2Fauth%2Ftokens.py", "light"],
   ["people", "/#/people", "dark"],
+  ["settings", "/#/settings", "light"],
+  ["add-repo", "/#/add", "dark"],
 ];
 
 for (const [name, url, theme] of shots) {

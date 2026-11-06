@@ -1,47 +1,61 @@
 @import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/atkinson-hyperlegible-next";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* Chart + UI tokens (dataviz reference palette: chrome, categorical slots 1-4, status). */
+/*
+ * Grasp: "uncharted territory is hatched".
+ * Cool survey-grey paper, slate-navy ink, one chart-blue accent. Chart series 1-4 and the risk
+ * scale keep their validated values (dataviz palette); only chrome tokens are Grasp's own.
+ */
 :root {
   color-scheme: light;
-  --page: #f9f9f7;
-  --surface-1: #fcfcfb;
-  --surface-2: #f0efec;
-  --ink: #0b0b0b;
-  --ink-2: #52514e;
-  --muted: #6f6d68;
-  --grid: #e1e0d9;
-  --axis: #c3c2b7;
-  --border: rgba(11, 11, 11, 0.1);
+  --page: #eef1f4;
+  --surface-1: #fbfcfd;
+  --surface-2: #e4e9ee;
+  --ink: #142433;
+  --ink-2: #44566a;
+  --muted: #5d6e80;
+  --grid: #dde3e9;
+  --axis: #b9c4cf;
+  --rule: #cfd8e1;
+  --border: rgba(20, 36, 51, 0.12);
+  --accent: #1e4fa8;
+  --accent-ink: #ffffff;
   --series-1: #2a78d6;
   --series-2: #eb6834;
   --series-3: #1baf7a;
   --series-4: #eda100;
-  --unearned: #e1e0d9;
+  --hatch: rgba(20, 36, 51, 0.22);
+  --unearned: #e4e9ee;
   --good: #006300;
-  --critical: #d03b3b;
-  --focus: #2a78d6;
+  --critical: #c0392b;
+  --focus: #1e4fa8;
 }
 [data-theme="dark"] {
   color-scheme: dark;
-  --page: #0d0d0d;
-  --surface-1: #1a1a19;
-  --surface-2: #232321;
-  --ink: #f0efec;
-  --ink-2: #c3c2b7;
-  --muted: #a3a199;
-  --grid: #2c2c2a;
-  --axis: #383835;
-  --border: rgba(255, 255, 255, 0.1);
+  --page: #0e1620;
+  --surface-1: #15202b;
+  --surface-2: #1d2a37;
+  --ink: #e8edf2;
+  --ink-2: #b3c0cc;
+  --muted: #8d9cab;
+  --grid: #243140;
+  --axis: #34414f;
+  --rule: #2a3745;
+  --border: rgba(232, 237, 242, 0.12);
+  --accent: #8fb3f5;
+  --accent-ink: #0e1620;
   --series-1: #3987e5;
   --series-2: #d95926;
   --series-3: #199e70;
   --series-4: #c98500;
-  --unearned: #383835;
-  --good: #0ca30c;
-  --critical: #e66767;
-  --focus: #6da7ec;
+  --hatch: rgba(232, 237, 242, 0.22);
+  --unearned: #1d2a37;
+  --good: #3fbf5f;
+  --critical: #f07a6e;
+  --focus: #8fb3f5;
 }
 
 @theme inline {
@@ -52,25 +66,87 @@
   --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
   --color-grid: var(--grid);
+  --color-rule: var(--rule);
   --color-line: var(--border);
-  --color-accent: var(--series-1);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
   --color-good: var(--good);
   --color-critical: var(--critical);
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Atkinson Hyperlegible Next Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Atkinson Hyperlegible Next Variable", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "SFMono-Regular", Menlo, monospace;
 }
 
 html,
 body {
   background: var(--page);
   color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Type scale: 1.25 (major third) from 16px. Display face carries headings and figures. */
+.t-hero {
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 6vw, 3.8rem);
+  line-height: 1;
+  font-weight: 650;
+  font-variation-settings: "opsz" 96;
+  letter-spacing: -0.03em;
+}
+.t-h1 {
+  font-family: var(--font-display);
+  font-size: 1.95rem;
+  line-height: 1.15;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  font-variation-settings: "opsz" 48;
+}
+.t-h2 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.3;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+}
+.t-figure {
+  font-family: var(--font-display);
+  font-size: 1.95rem;
+  line-height: 1.05;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* The one motif: what nobody understands yet is hatched, like unsurveyed land on a map. */
+.hatch {
+  background-color: var(--unearned);
+  background-image: repeating-linear-gradient(-45deg, var(--hatch) 0 1.5px, transparent 1.5px 7px);
 }
 
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .hatch {
+    background-image: repeating-linear-gradient(-45deg, CanvasText 0 1px, transparent 1px 7px);
+  }
 }

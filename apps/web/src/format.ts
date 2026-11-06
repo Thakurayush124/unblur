@@ -23,16 +23,16 @@ export function ago(iso: string | null | undefined): string {
  */
 const LIGHT: [number, string][] = [
   [0, "#cfe8cc"],
-  [30, "#e6eadf"],
-  [50, "#f0efec"],
+  [30, "#e2eae3"],
+  [50, "#e9edf1"],
   [70, "#f2b8a7"],
   [85, "#e06a55"],
   [100, "#b3261e"],
 ];
 const DARK: [number, string][] = [
   [0, "#24452a"],
-  [30, "#2f3a30"],
-  [50, "#383835"],
+  [30, "#25393a"],
+  [50, "#2b3643"],
   [70, "#7a3a2e"],
   [85, "#c2483a"],
   [100, "#ef6b5f"],

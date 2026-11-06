@@ -63,7 +63,7 @@ export function Breakdown({ s, w, comprehension }: { s: Sig; w: W | null; compre
               style={{ width: `${(r.points / scale) * 100}%`, background: r.color }}
             />
           ))}
-        <div className="flex-1" style={{ background: "var(--unearned)" }} title="Not earned" />
+        <div className="hatch flex-1" title="Not earned: comprehension this file has not yet earned" />
       </div>
       <div className="mt-1 flex justify-between text-xs tabular text-muted">
         <span>0</span>

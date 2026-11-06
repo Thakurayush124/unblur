@@ -97,7 +97,7 @@ export default function PeoplePage() {
                           {m.module}
                         </a>
                         <div className="text-xs text-muted">
-                          {m.files} {m.files === 1 ? "file" : "files"} · {int(m.loc)} LOC
+                          {m.files} {m.files === 1 ? "file" : "files"}, {int(m.loc)} lines
                         </div>
                       </td>
                       <td className={`${td} tabular`}>

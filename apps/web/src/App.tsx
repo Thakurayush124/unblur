@@ -2,7 +2,6 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 
 import { useApi, type RepoSummary } from "./api";
 import { Load } from "./components/ui";
-import { ago } from "./format";
 import AddRepoPage from "./pages/AddRepo";
 import FileDetailPage from "./pages/FileDetail";
 import HeatmapPage from "./pages/Heatmap";
@@ -75,7 +74,6 @@ export default function App() {
     if (repoId) localStorage.setItem(REPO_KEY, repoId);
   }, [repoId]);
 
-  const current = repos.status === "ok" ? repos.data.find((r) => r.id === repoId) : undefined;
   const active = route.page === "file" ? "heatmap" : route.page;
 
   return (
@@ -90,32 +88,43 @@ export default function App() {
       >
         Skip to content
       </a>
-      <header className="border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-          <a href={href("overview")} className="flex items-baseline gap-2">
-            <span className="text-lg font-bold">Grasp</span>
-            <span className="hidden text-xs text-muted sm:inline">comprehension debt radar</span>
+      <header className="border-b border-rule bg-surface">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-5 pt-4 sm:px-8">
+          <a href={href("overview")} className="flex items-center gap-2.5 pb-3" aria-label="Grasp, overview">
+            {/* Mark: a square half surveyed, half hatched */}
+            <span
+              aria-hidden
+              className="relative inline-block h-5 w-5 overflow-hidden rounded-[3px] border border-ink/70"
+            >
+              <span className="hatch absolute inset-0" />
+              <span className="absolute inset-y-0 left-0 w-1/2 bg-ink" />
+            </span>
+            <span className="font-display text-xl font-semibold tracking-tight">Grasp</span>
           </a>
-          <nav aria-label="Main" className="flex gap-1">
+          <nav aria-label="Main" className="order-last -mb-px flex w-full gap-6 sm:order-none sm:w-auto">
             {NAV.map((n) => (
               <a
                 key={n.page}
                 href={href(n.page)}
                 aria-current={active === n.page ? "page" : undefined}
-                className={`rounded-md px-3 py-1.5 text-sm ${active === n.page ? "bg-surface-2 font-semibold" : "text-ink-2 hover:bg-surface-2"}`}
+                className={`border-b-2 pb-3 text-[15px] ${
+                  active === n.page
+                    ? "border-accent font-semibold text-ink"
+                    : "border-transparent text-ink-2 hover:border-rule hover:text-ink"
+                }`}
               >
                 {n.label}
               </a>
             ))}
           </nav>
-          <div className="ml-auto flex flex-wrap items-center justify-end gap-3 text-sm">
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-3 pb-3 text-sm">
             {repos.status === "ok" && repos.data.length > 0 && (
               <label className="flex items-center gap-2">
-                <span className="text-muted">Repo</span>
+                <span className="text-ink-2">Repository</span>
                 <select
                   value={repoId}
                   onChange={(e) => selectRepo(e.target.value)}
-                  className="rounded-md border border-line bg-surface px-2 py-1"
+                  className="max-w-[14rem] rounded-md border border-line bg-surface px-2 py-1.5"
                 >
                   {repos.data.map((r) => (
                     <option key={r.id} value={r.id}>
@@ -125,23 +134,20 @@ export default function App() {
                 </select>
               </label>
             )}
-            {current && (
-              <span className="hidden text-muted md:inline">analysed {ago(current.lastAnalyzedAt)}</span>
-            )}
             <a
               href={href("add")}
               aria-current={route.page === "add" ? "page" : undefined}
-              className="rounded-md border border-line px-2.5 py-1 hover:bg-surface-2"
+              className="rounded-md bg-accent px-3 py-1.5 font-semibold text-accent-ink hover:opacity-90"
             >
-              <span aria-hidden>+ </span>Add repo
+              Add repo
             </a>
-            <label className="flex items-center gap-2">
+            <label className="flex items-center">
               <span className="sr-only">Theme</span>
               <select
                 aria-label="Theme"
                 value={theme.choice}
                 onChange={(e) => theme.setChoice(e.target.value as ThemeChoice)}
-                className="rounded-md border border-line bg-surface px-2 py-1"
+                className="rounded-md border border-line bg-surface px-2 py-1.5"
               >
                 <option value="system">System theme</option>
                 <option value="light">Light</option>
@@ -151,7 +157,7 @@ export default function App() {
           </div>
         </div>
       </header>
-      <main id="main" tabIndex={-1} className="mx-auto max-w-7xl px-4 py-6 outline-none">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-6xl px-5 py-10 outline-none sm:px-8">
         <Load state={repos}>
           {(list) =>
             route.page === "add" || list.length === 0 ? (

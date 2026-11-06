@@ -25,10 +25,10 @@ export default function HeatmapPage({ module }: { module: string | null }) {
               sub={
                 zoomed ? (
                   <>
-                    <a href={href("heatmap")} className="text-accent hover:underline">
-                      ← All modules
-                    </a>{" "}
-                    · {zoomed.files.length} files · {int(zoomed.loc)} LOC · risk {score(zoomed.risk)}
+                    {zoomed.files.length} files and {int(zoomed.loc)} lines, module risk {score(zoomed.risk)}.{" "}
+                    <a href={href("heatmap")} className="text-accent underline-offset-4 hover:underline">
+                      Back to all modules
+                    </a>
                   </>
                 ) : (
                   "Where risky code lives. Select a module to zoom in, then a file for its breakdown."

@@ -105,7 +105,7 @@ test.describe("demo repo", () => {
     await page.getByRole("combobox", { name: "Theme" }).selectOption("dark");
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-    expect(bg).toBe("rgb(13, 13, 13)");
+    expect(bg).toBe("rgb(14, 22, 32)"); // --page in dark mode (#0e1620)
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   });

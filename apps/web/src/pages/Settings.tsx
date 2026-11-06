@@ -39,12 +39,12 @@ const LISTS: { key: ListKey; label: string; help: string }[] = [
   {
     key: "criticalPathPatterns",
     label: "Critical path patterns",
-    help: "Regexes searched in file paths → criticality 0.9.",
+    help: "Regexes searched in file paths. A match sets criticality to 0.9.",
   },
   {
     key: "criticalPaths",
     label: "Critical paths",
-    help: "Globs you mark as critical → criticality 1.0 (e.g. src/ledger/).",
+    help: "Globs for code you know is critical, such as src/ledger/. A match sets criticality to 1.0.",
   },
   {
     key: "ignoreGlobs",
@@ -131,7 +131,7 @@ function Editor({ initial, repoId }: { initial: SettingsResponse; repoId: string
 
   return (
     <form onSubmit={onSubmit} className="grid gap-6" noValidate>
-      <Card title="Scoring weights" id="w-h">
+      <Card title="Scoring weights" id="w-h" variant="panel">
         <p className="mb-3 text-sm text-ink-2">
           comprehension = 100 × (w_a·(1−A) + w_r·R + w_h·(H·K) + w_e·E)
         </p>
@@ -186,7 +186,7 @@ function Editor({ initial, repoId }: { initial: SettingsResponse; repoId: string
         </div>
       </Card>
 
-      <Card title="Detection and criticality rules" id="rules-h">
+      <Card title="Detection and criticality rules" id="rules-h" variant="panel">
         <div className="grid gap-4 md:grid-cols-2">
           {LISTS.map((l) => (
             <label key={l.key} className="text-sm">
@@ -210,7 +210,7 @@ function Editor({ initial, repoId }: { initial: SettingsResponse; repoId: string
         </div>
       </Card>
 
-      <Card title="LLM criticality (opt-in)" id="llm-h">
+      <Card title="LLM criticality (opt-in)" id="llm-h" variant="panel">
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
@@ -234,7 +234,7 @@ function Editor({ initial, repoId }: { initial: SettingsResponse; repoId: string
         <button
           type="submit"
           disabled={saving}
-          className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink hover:opacity-90 disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save settings"}
         </button>

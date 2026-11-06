@@ -65,7 +65,7 @@ function AddForm({ caps }: { caps: Capabilities }) {
   const busy = submitting || job?.status === "queued" || job?.status === "running";
   return (
     <div className="grid gap-6">
-      <Card>
+      <Card variant="panel">
         <form onSubmit={submit} className="grid gap-4" noValidate>
           <label className="text-sm">
             <span className="mb-1 block font-medium">Repository</span>
@@ -116,7 +116,7 @@ function AddForm({ caps }: { caps: Capabilities }) {
             <button
               type="submit"
               disabled={busy || !source.trim()}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink hover:opacity-90 disabled:opacity-50"
             >
               {busy ? "Analysing…" : "Analyse repository"}
             </button>
