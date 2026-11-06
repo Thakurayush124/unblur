@@ -11,7 +11,9 @@ then analyses it (with matching PR data) and writes the worker JSON the dashboar
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
+import stat
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -85,17 +87,28 @@ class Demo:
             ttfr = 6
         elif review == "deep":
             reviews = [
-                Review(reviewer_id=reviewer[1], state="CHANGES_REQUESTED", submitted_at=opened,
-                       comment_count=4, body_length=220),
+                Review(
+                    reviewer_id=reviewer[1],
+                    state="CHANGES_REQUESTED",
+                    submitted_at=opened,
+                    comment_count=4,
+                    body_length=220,
+                ),
                 Review(reviewer_id=reviewer[1], state="APPROVED", submitted_at=opened, comment_count=1),
             ]
             ttfr = 90
         self.prs.append(
             PullRequest(
-                repo_id="demo", number=pr, author_id=author[1], opened_at=opened,
-                merged_at=NOW - timedelta(days=days), additions=changed, commit_shas=[sha],
+                repo_id="demo",
+                number=pr,
+                author_id=author[1],
+                opened_at=opened,
+                merged_at=NOW - timedelta(days=days),
+                additions=changed,
+                commit_shas=[sha],
                 labels=["ai-generated"] if trailer and review == "stamp" else [],
-                reviews=reviews, time_to_first_review_mins=ttfr,
+                reviews=reviews,
+                time_to_first_review_mins=ttfr,
             )
         )
 
@@ -103,68 +116,206 @@ class Demo:
 def build(path: Path) -> Demo:
     d = Demo(path)
     utils = ["src.utils.helpers"]
-    d.commit("Project skeleton", {
-        "README.md": "# Acme Payments\n\nInternal payments service.\n",
-        "requirements.txt": "flask==3.0.0\nsqlalchemy==2.0.0\n",
-        "src/utils/helpers.py": py("helper", 90, "dana"),
-        "src/utils/log.py": py("log", 45, "dana"),
-        "src/api/routes.py": py("route", 60, "dana", utils),
-        "src/ui/layout.py": py("layout", 75, "dana", utils),
-        "src/ui/forms.py": py("form", 60, "dana", utils),
-    }, DANA, 700)
+    d.commit(
+        "Project skeleton",
+        {
+            "README.md": "# Acme Payments\n\nInternal payments service.\n",
+            "requirements.txt": "flask==3.0.0\nsqlalchemy==2.0.0\n",
+            "src/utils/helpers.py": py("helper", 90, "dana"),
+            "src/utils/log.py": py("log", 45, "dana"),
+            "src/api/routes.py": py("route", 60, "dana", utils),
+            "src/ui/layout.py": py("layout", 75, "dana", utils),
+            "src/ui/forms.py": py("form", 60, "dana", utils),
+        },
+        DANA,
+        700,
+    )
     d.commit("Data models", {"src/data/models.py": py("model", 120, "dana", utils)}, DANA, 600, pr=3)
-    d.commit("Add session + token auth", {
-        "src/auth/session.py": py("session", 210, "ai-auth", utils + ["src.data.models"]),
-        "src/auth/tokens.py": py("token", 270, "ai-tokens", utils),
-        "src/auth/permissions.py": py("perm", 150, "ai-perm", utils + ["src.auth.session"]),
-    }, MARCO, 420, CLAUDE, pr=11, review="stamp", reviewer=DANA)
-    d.commit("Initial migrations", {
-        "src/data/migrations/m0001_init.py": py("m1", 90, "ai-mig"),
-        "src/data/migrations/m0002_users.py": py("m2", 60, "ai-mig"),
-    }, MARCO, 400, CLAUDE, pr=14)
-    d.commit("Invoice generation", {
-        "src/billing/invoice.py": py("invoice", 240, "ai-invoice", utils + ["src.data.models"]),
-    }, MARCO, 300, CLAUDE, pr=19, review="deep", reviewer=PRIYA)
-    d.commit("Hand-tune invoice rounding + tax rules", {
-        "src/billing/invoice.py": py("invoice", 200, "ai-invoice", utils + ["src.data.models"])
-        + py("rounding", 45, "priya"),
-        "src/billing/tax.py": py("tax", 120, "priya", utils + ["src.billing.invoice"]),
-    }, PRIYA, 250, pr=22, review="deep", reviewer=LEE)
-    d.commit("API handlers for payments", {
-        "src/api/handlers.py": py("handler", 300, "ai-handlers",
-                                  utils + ["src.auth.session", "src.billing.invoice"]),
-    }, MARCO, 240, CLAUDE, pr=25, review="stamp", reviewer=PRIYA)
-    d.commit("Fix token expiry off-by-one", {
-        "src/auth/tokens.py": py("token", 255, "ai-tokens", utils) + py("expiry", 15, "marco"),
-    }, MARCO, 215, pr=27, review="light", reviewer=PRIYA)
-    d.commit("Dashboard widgets", {
-        "src/ui/dashboard.py": py("widget", 180, "copilot-ui", utils + ["src.ui.layout"]),
-    }, SAM, 120, COPILOT, pr=31, review="light", reviewer=LEE)
-    d.commit("Handler validation and error mapping", {
-        "src/api/handlers.py": py("handler", 240, "ai-handlers",
-                                  utils + ["src.auth.session", "src.billing.invoice"])
-        + py("validate", 60, "lee"),
-    }, LEE, 90, pr=33, review="deep", reviewer=PRIYA)
+    d.commit(
+        "Add session + token auth",
+        {
+            "src/auth/session.py": py("session", 210, "ai-auth", [*utils, "src.data.models"]),
+            "src/auth/tokens.py": py("token", 270, "ai-tokens", utils),
+            "src/auth/permissions.py": py("perm", 150, "ai-perm", [*utils, "src.auth.session"]),
+        },
+        MARCO,
+        420,
+        CLAUDE,
+        pr=11,
+        review="stamp",
+        reviewer=DANA,
+    )
+    d.commit(
+        "Initial migrations",
+        {
+            "src/data/migrations/m0001_init.py": py("m1", 90, "ai-mig"),
+            "src/data/migrations/m0002_users.py": py("m2", 60, "ai-mig"),
+        },
+        MARCO,
+        400,
+        CLAUDE,
+        pr=14,
+    )
+    d.commit(
+        "Invoice generation",
+        {
+            "src/billing/invoice.py": py("invoice", 240, "ai-invoice", [*utils, "src.data.models"]),
+        },
+        MARCO,
+        300,
+        CLAUDE,
+        pr=19,
+        review="deep",
+        reviewer=PRIYA,
+    )
+    d.commit(
+        "Hand-tune invoice rounding + tax rules",
+        {
+            "src/billing/invoice.py": py("invoice", 200, "ai-invoice", [*utils, "src.data.models"])
+            + py("rounding", 45, "priya"),
+            "src/billing/tax.py": py("tax", 120, "priya", [*utils, "src.billing.invoice"]),
+        },
+        PRIYA,
+        250,
+        pr=22,
+        review="deep",
+        reviewer=LEE,
+    )
+    d.commit(
+        "API handlers for payments",
+        {
+            "src/api/handlers.py": py(
+                "handler", 300, "ai-handlers", [*utils, "src.auth.session", "src.billing.invoice"]
+            ),
+        },
+        MARCO,
+        240,
+        CLAUDE,
+        pr=25,
+        review="stamp",
+        reviewer=PRIYA,
+    )
+    d.commit(
+        "Fix token expiry off-by-one",
+        {
+            "src/auth/tokens.py": py("token", 255, "ai-tokens", utils) + py("expiry", 15, "marco"),
+        },
+        MARCO,
+        215,
+        pr=27,
+        review="light",
+        reviewer=PRIYA,
+    )
+    d.commit(
+        "Dashboard widgets",
+        {
+            "src/ui/dashboard.py": py("widget", 180, "copilot-ui", [*utils, "src.ui.layout"]),
+        },
+        SAM,
+        120,
+        COPILOT,
+        pr=31,
+        review="light",
+        reviewer=LEE,
+    )
+    d.commit(
+        "Handler validation and error mapping",
+        {
+            "src/api/handlers.py": py(
+                "handler", 240, "ai-handlers", [*utils, "src.auth.session", "src.billing.invoice"]
+            )
+            + py("validate", 60, "lee"),
+        },
+        LEE,
+        90,
+        pr=33,
+        review="deep",
+        reviewer=PRIYA,
+    )
     d.commit("Bump flask", {"requirements.txt": "flask==3.0.3\nsqlalchemy==2.0.0\n"}, BOT, 60)
-    d.commit("Refund flow", {
-        "src/billing/refunds.py": py("refund", 330, "cursor-refunds",
-                                     utils + ["src.billing.invoice", "src.auth.permissions"]),
-    }, SAM, 45, CURSOR, pr=36, review="stamp", reviewer=PRIYA)
-    d.commit("Invoice: partial payments", {
-        "src/billing/invoice.py": py("invoice", 200, "ai-invoice", utils + ["src.data.models"])
-        + py("rounding", 45, "priya") + py("partial", 30, "priya"),
-    }, PRIYA, 30, pr=38, review="deep", reviewer=SAM)
-    d.commit("Refunds migration", {
-        "src/data/migrations/m0003_refunds.py": py("m3", 75, "ai-mig"),
-    }, SAM, 20, CLAUDE, pr=40)
-    d.commit("Refactor helpers", {"src/utils/helpers.py": py("helper", 60, "dana") + py("helper", 45, "lee", start=30)},
-             LEE, 10, pr=42, review="deep", reviewer=SAM)
-    d.commit("Dark theme", {"src/ui/theme.py": py("theme", 90, "priya", ["src.ui.layout"])},
-             PRIYA, 5, pr=44, review="light", reviewer=SAM)
-    d.commit("Billing tests", {
-        "tests/test_billing.py": py("test_bill", 150, "ai-tests", ["src.billing.invoice", "src.billing.tax"]),
-    }, SAM, 3, CLAUDE, pr=45, review="deep", reviewer=PRIYA)
+    d.commit(
+        "Refund flow",
+        {
+            "src/billing/refunds.py": py(
+                "refund", 330, "cursor-refunds", [*utils, "src.billing.invoice", "src.auth.permissions"]
+            ),
+        },
+        SAM,
+        45,
+        CURSOR,
+        pr=36,
+        review="stamp",
+        reviewer=PRIYA,
+    )
+    d.commit(
+        "Invoice: partial payments",
+        {
+            "src/billing/invoice.py": py("invoice", 200, "ai-invoice", [*utils, "src.data.models"])
+            + py("rounding", 45, "priya")
+            + py("partial", 30, "priya"),
+        },
+        PRIYA,
+        30,
+        pr=38,
+        review="deep",
+        reviewer=SAM,
+    )
+    d.commit(
+        "Refunds migration",
+        {
+            "src/data/migrations/m0003_refunds.py": py("m3", 75, "ai-mig"),
+        },
+        SAM,
+        20,
+        CLAUDE,
+        pr=40,
+    )
+    d.commit(
+        "Refactor helpers",
+        {"src/utils/helpers.py": py("helper", 60, "dana") + py("helper", 45, "lee", start=30)},
+        LEE,
+        10,
+        pr=42,
+        review="deep",
+        reviewer=SAM,
+    )
+    d.commit(
+        "Dark theme",
+        {"src/ui/theme.py": py("theme", 90, "priya", ["src.ui.layout"])},
+        PRIYA,
+        5,
+        pr=44,
+        review="light",
+        reviewer=SAM,
+    )
+    d.commit(
+        "Billing tests",
+        {
+            "tests/test_billing.py": py(
+                "test_bill", 150, "ai-tests", ["src.billing.invoice", "src.billing.tax"]
+            ),
+        },
+        SAM,
+        3,
+        CLAUDE,
+        pr=45,
+        review="deep",
+        reviewer=PRIYA,
+    )
     return d
+
+
+def _force_remove(func: object, path: str, _exc: object) -> None:
+    """Windows marks git objects read-only; clear the flag and retry."""
+    os.chmod(path, stat.S_IWRITE)
+    os.unlink(path)
+
+
+def rmtree(path: Path) -> None:
+    if sys.version_info >= (3, 12):
+        shutil.rmtree(path, onexc=_force_remove)
+    else:  # pragma: no cover
+        shutil.rmtree(path, onerror=_force_remove)
 
 
 def main() -> int:
@@ -177,7 +328,7 @@ def main() -> int:
     if repo.exists():
         if not (repo / ".git").is_dir():
             raise SystemExit(f"refusing to delete {repo}: not a git repo")
-        shutil.rmtree(repo)
+        rmtree(repo)
     demo = build(repo)
     result = analyze(repo, as_of=NOW, pull_requests=demo.prs)
     json_store.save(result, out)
