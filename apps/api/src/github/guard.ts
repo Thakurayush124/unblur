@@ -3,13 +3,13 @@
  *
  * A PR that modifies any file with risk >= threshold gets an `action_required` check until
  *   1. its description has a `## Why this works` section (>= minSentences sentences), AND
- *   2. a reviewer other than the author approves with a review containing `/grasp verified`.
- * PRs that touch only low-risk files always pass; repos Grasp has not analysed yet are neutral.
+ *   2. a reviewer other than the author approves with a review containing `/unblur verified`.
+ * PRs that touch only low-risk files always pass; repos Unblur has not analysed yet are neutral.
  */
 
-export const CHECK_NAME = "Grasp: comprehension check";
-export const COMMENT_MARKER = "<!-- grasp:comprehension-check -->";
-export const VERIFY_PHRASE = "/grasp verified";
+export const CHECK_NAME = "Unblur: comprehension check";
+export const COMMENT_MARKER = "<!-- unblur:comprehension-check -->";
+export const VERIFY_PHRASE = "/unblur verified";
 
 export interface FileRisk {
   risk: number;
@@ -72,7 +72,7 @@ export function countSentences(text: string): number {
     .filter((s) => /[a-z]{2,}/i.test(s) && s.split(/\s+/).length >= 3).length;
 }
 
-/** First non-author human whose latest decisive review is APPROVED and who wrote /grasp verified. */
+/** First non-author human whose latest decisive review is APPROVED and who wrote /unblur verified. */
 export function verifiedBy(reviews: PrReview[], prAuthor: string): string | null {
   const byUser = new Map<string, PrReview[]>();
   for (const r of reviews) {
@@ -101,7 +101,7 @@ export function evaluate(input: GuardInput): GuardResult {
       state: "not_analysed",
       conclusion: "neutral",
       title: "Not analysed yet",
-      summary: "Grasp has not finished analysing this repository yet, so this PR is not checked.",
+      summary: "Unblur has not finished analysing this repository yet, so this PR is not checked.",
     };
   }
   const seen = new Set<string>();
@@ -179,7 +179,7 @@ function renderSummary(
 export function commentBody(result: GuardResult, prAuthor: string): string {
   const head =
     result.state === "passed"
-      ? `✅ **Grasp comprehension check passed.** Verified by @${result.verifiedBy}. Thanks for writing down why this works.`
+      ? `✅ **Unblur comprehension check passed.** Verified by @${result.verifiedBy}. Thanks for writing down why this works.`
       : `👋 @${prAuthor}, this PR touches **${result.risky.length} high-risk file${result.risky.length === 1 ? "" : "s"}**: code with high criticality that few people on the team currently understand. Please add a \`## Why this works\` section (3–5 sentences) to the PR description so reviewers, and future maintainers, can follow the reasoning.`;
-  return `${COMMENT_MARKER}\n${head}\n\n${result.summary}\n\n<sub>Posted by Grasp. This comment is updated in place.</sub>`;
+  return `${COMMENT_MARKER}\n${head}\n\n${result.summary}\n\n<sub>Posted by Unblur. This comment is updated in place.</sub>`;
 }

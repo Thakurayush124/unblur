@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 
-from grasp.gitutil import git_bytes
+from unblur.gitutil import git_bytes
 
 
 def read_blobs(repo: str | Path, rev: str, paths: Iterable[str]) -> dict[str, str]:

@@ -69,7 +69,7 @@ export const TOUR_STEPS: TourStep[] = [
     page: "people",
     target: "coverage",
     title: "Who knows what",
-    body: "For each module: who still holds working knowledge, and who has left. It's a team view. Grasp never scores or ranks individual people.",
+    body: "For each module: who still holds working knowledge, and who has left. It's a team view. Unblur never scores or ranks individual people.",
   },
   {
     id: "settings",
@@ -83,7 +83,7 @@ export const TOUR_STEPS: TourStep[] = [
     page: "add",
     target: "add-form",
     title: "Analyse any repository",
-    body: "Paste a git URL or a local folder. Grasp clones it, reads its history and shows the results here. Your source code stays on this machine.",
+    body: "Paste a git URL or a local folder. Unblur clones it, reads its history and shows the results here. Your source code stays on this machine.",
   },
   {
     id: "github",

@@ -1,4 +1,4 @@
-"""Grasp CLI.
+"""Unblur CLI.
 
 python cli.py analyze /path/to/repo [--since 365d] [--json out.json | --mongo-url URL]
 """
@@ -13,13 +13,13 @@ from datetime import datetime
 from pathlib import Path
 from types import ModuleType
 
-from grasp.config import GraspConfig
-from grasp.gitutil import GitError, git
-from grasp.ingest.commits import parse_since
-from grasp.ingest.source import ensure_clone, is_remote, slug_for, validate_remote
-from grasp.models import AnalysisResult, PullRequest
-from grasp.pipeline import analyze
-from grasp.store import json_store
+from unblur.config import UnblurConfig
+from unblur.gitutil import GitError, git
+from unblur.ingest.commits import parse_since
+from unblur.ingest.source import ensure_clone, is_remote, slug_for, validate_remote
+from unblur.models import AnalysisResult, PullRequest
+from unblur.pipeline import analyze
+from unblur.store import json_store
 
 
 def _summary(result: AnalysisResult, top: int) -> str:
@@ -28,7 +28,7 @@ def _summary(result: AnalysisResult, top: int) -> str:
     ai_loc = sum(f.ai_lines for f in result.file_scores)
     ai_commits = sum(1 for c in result.commits if c.is_ai_assisted)
     lines = [
-        f"Grasp analysis: {result.repo.name} @ {(result.repo.last_analyzed_sha or '')[:10]}"
+        f"Unblur analysis: {result.repo.name} @ {(result.repo.last_analyzed_sha or '')[:10]}"
         f" ({'incremental' if s.incremental else 'full'}, {s.duration_sec:.2f}s)",
         f"  files analysed {s.files_analyzed} (re-blamed {s.files_reblamed}, ignored {s.files_ignored})",
         f"  commits {s.commits_ingested} (new {s.commits_new}), AI-assisted {ai_commits}",
@@ -62,12 +62,12 @@ def _summary(result: AnalysisResult, top: int) -> str:
 
 def _progress(msg: str) -> None:
     # Machine-readable progress on stderr (the API shows the latest line while a job runs).
-    print(f"[grasp] {msg}", file=sys.stderr, flush=True)
+    print(f"[unblur] {msg}", file=sys.stderr, flush=True)
 
 
 def main(argv: list[str] | None = None) -> int:
     root = Path(__file__).resolve().parents[1]
-    ap = argparse.ArgumentParser(prog="grasp")
+    ap = argparse.ArgumentParser(prog="unblur")
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("analyze", help="analyse a git repository (local path or remote URL)")
     a.add_argument("source", metavar="repo", help="local checkout path, or a git URL to clone")
@@ -76,12 +76,12 @@ def main(argv: list[str] | None = None) -> int:
     a.add_argument("--data-dir", help="write results to <data-dir>/<repo-slug>.json")
     a.add_argument(
         "--workdir",
-        default=os.environ.get("GRASP_WORKDIR", str(root / "repos")),
-        help="where remote URLs are cloned (default: <grasp>/repos)",
+        default=os.environ.get("UNBLUR_WORKDIR", str(root / "repos")),
+        help="where remote URLs are cloned (default: <unblur>/repos)",
     )
-    a.add_argument("--mongo-url", default=os.environ.get("GRASP_MONGO_URL"))
-    a.add_argument("--mongo-db", default=os.environ.get("GRASP_MONGO_DB", "grasp"))
-    a.add_argument("--config", help="config JSON (default: <repo>/.grasp.json)")
+    a.add_argument("--mongo-url", default=os.environ.get("UNBLUR_MONGO_URL"))
+    a.add_argument("--mongo-db", default=os.environ.get("UNBLUR_MONGO_DB", "unblur"))
+    a.add_argument("--config", help="config JSON (default: <repo>/.unblur.json)")
     a.add_argument("--full", action="store_true", help="ignore previous results; re-analyse")
     a.add_argument("--as-of", help="ISO timestamp used as 'now' (for reproducible runs)")
     a.add_argument("--top", type=int, default=10)
@@ -118,17 +118,17 @@ def _analyze(args: argparse.Namespace) -> int:
 
     mongo: ModuleType | None = None
     if args.mongo_url and not json_out:
-        from grasp.store import mongo_store
+        from unblur.store import mongo_store
 
         mongo = mongo_store
 
-    # Settings saved from the dashboard override the repo's .grasp.json.
+    # Settings saved from the dashboard override the repo's .unblur.json.
     overrides: dict[str, object] = {}
     if json_out:
         overrides = json_store.load_overrides(json_out)
     elif mongo is not None:
         overrides = mongo.load_overrides(args.mongo_url, repo_path, args.mongo_db)
-    cfg = GraspConfig.load(repo_path, args.config, overrides)
+    cfg = UnblurConfig.load(repo_path, args.config, overrides)
 
     previous = None
     if not args.full:

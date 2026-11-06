@@ -1,14 +1,14 @@
-# Grasp: a comprehension debt radar
+# Unblur: a comprehension debt radar
 
 **Comprehension debt** is the gap between how much code a repo contains and how much of it the team actually understands. It grows fastest when AI agents (Claude Code, Copilot, Cursor, Codex…) write code that gets merged with little review and is never touched by a human again.
 
-Grasp measures **team understanding of code, not code quality**. It answers three questions:
+Unblur measures **team understanding of code, not code quality**. It answers three questions:
 
 1. Where is the code that nobody on the team really understands?
 2. How risky is that, given how critical the code is?
 3. Who should learn which module, and which PRs need extra scrutiny?
 
-> **Principle: no individual performance scoring.** Grasp never ranks engineers by comprehension or AI usage. People-level data is only used to show *knowledge coverage per module* (for example "bus factor 0").
+> **Principle: no individual performance scoring.** Unblur never ranks engineers by comprehension or AI usage. People-level data is only used to show *knowledge coverage per module* (for example "bus factor 0").
 
 ## Status
 
@@ -32,7 +32,7 @@ This builds a synthetic repo in `repos/demo`. It contains human-written code, AI
 
 ### Analyse any repository
 
-**From the dashboard:** click **+ Add repo** and paste a git URL (`https://github.com/owner/repo`, `git@host:owner/repo.git`, …) or the path of a local checkout. Grasp clones the repo into `repos/`, analyses it, and opens its overview. Clicking **Re-analyse** later fetches new commits and only re-blames files that changed.
+**From the dashboard:** click **+ Add repo** and paste a git URL (`https://github.com/owner/repo`, `git@host:owner/repo.git`, …) or the path of a local checkout. Unblur clones the repo into `repos/`, analyses it, and opens its overview. Clicking **Re-analyse** later fetches new commits and only re-blames files that changed.
 
 **From the command line:**
 
@@ -45,9 +45,9 @@ npm install && npm run build && node apps/api/dist/index.js                     
 
 Results go to `data/<owner-repo>.json`. Re-running is **incremental**: remote repos are fetched, only new commits are read, and only changed files are re-blamed. Pass `--full` to force a complete re-run. Settings you save in the dashboard go to `data/<name>.json.settings.json`, and the worker applies them on the next run.
 
-Private repos work if your own git credentials (SSH key or credential helper) can clone them. Grasp never prompts for or stores credentials.
+Private repos work if your own git credentials (SSH key or credential helper) can clone them. Unblur never prompts for or stores credentials.
 
-> **Security:** the API can clone and run `git` on repos you submit, so it listens on `127.0.0.1` only. Don't expose it publicly. Set `GRASP_JOBS=off` to disable analysis from the dashboard, and `GRASP_ALLOW_LOCAL_PATHS=false` to accept git URLs only. URLs are validated, so option injection (`-o…`) and `ext::`/`file://` transports are refused, and the worker runs without a shell.
+> **Security:** the API can clone and run `git` on repos you submit, so it listens on `127.0.0.1` only. Don't expose it publicly. Set `UNBLUR_JOBS=off` to disable analysis from the dashboard, and `UNBLUR_ALLOW_LOCAL_PATHS=false` to accept git URLs only. URLs are validated, so option injection (`-o…`) and `ext::`/`file://` transports are refused, and the worker runs without a shell.
 
 ### Docker (Mongo mode)
 
@@ -85,9 +85,9 @@ Light and dark themes are both supported. With 5,000 files, the overview and the
 
 ## GitHub App and PR guard
 
-Install the Grasp GitHub App on a repository and it will:
+Install the Unblur GitHub App on a repository and it will:
 - **backfill merged PRs and reviews** (GraphQL), so review depth (R) reflects real reviews rather than the neutral 0.5,
-- run a **"Grasp: comprehension check"** on every PR. If the PR modifies a file with risk ≥ 60, the check is `action_required` and Grasp posts *one* comment asking for a `## Why this works` section (3–5 sentences). It passes only when that section exists **and** a reviewer other than the author approves with `/grasp verified`. PRs that touch only low-risk files are never blocked,
+- run a **"Unblur: comprehension check"** on every PR. If the PR modifies a file with risk ≥ 60, the check is `action_required` and Unblur posts *one* comment asking for a `## Why this works` section (3–5 sentences). It passes only when that section exists **and** a reviewer other than the author approves with `/unblur verified`. PRs that touch only low-risk files are never blocked,
 - **re-analyse incrementally** on merge and on pushes to the default branch.
 
 Setup takes about 10 minutes. See **[docs/github-app.md](docs/github-app.md)**.
@@ -130,7 +130,7 @@ Files roll up into modules (LOC-weighted means). Every run writes a `Snapshot` u
 
 ### Optional LLM criticality (two opt-ins required)
 
-Set `"llmCriticality": true` in `.grasp.json` **and** `GRASP_ALLOW_LLM_CODE=true`. Each request sends only the file path, the first 60 lines and the exported symbol names. Verdicts are cached by content hash, and every call is written to `llmAudit` with the file, the bytes sent and the model. Supported providers:
+Set `"llmCriticality": true` in `.unblur.json` **and** `UNBLUR_ALLOW_LLM_CODE=true`. Each request sends only the file path, the first 60 lines and the exported symbol names. Verdicts are cached by content hash, and every call is written to `llmAudit` with the file, the bytes sent and the model. Supported providers:
 
 - `anthropic`: Claude, via the optional `anthropic` package
 - `gemini`: Google AI Studio, which has a free tier
@@ -140,7 +140,7 @@ See `.env.example` for setup.
 
 ## Configuration
 
-Put a `.grasp.json` file in the repo root, or pass `--config`. Every key is optional:
+Put a `.unblur.json` file in the repo root, or pass `--config`. Every key is optional:
 
 ```json
 {

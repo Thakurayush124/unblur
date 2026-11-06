@@ -204,6 +204,6 @@ class AnalysisResult(_Doc):
     # content-hash -> LLM criticality verdict, and an append-only audit of every LLM call
     llm_cache: dict[str, LlmCacheEntry] = Field(default_factory=dict)
     llm_audit: list[LlmAuditEntry] = Field(default_factory=list)
-    # The effective GraspConfig used for this run (camelCase), shown by the dashboard.
+    # The effective UnblurConfig used for this run (camelCase), shown by the dashboard.
     config: dict[str, Any] | None = None
     stats: RunStats = Field(default_factory=RunStats)

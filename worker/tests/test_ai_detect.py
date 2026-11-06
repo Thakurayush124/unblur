@@ -4,9 +4,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-from grasp.config import GraspConfig
-from grasp.ingest.ai_detect import AiDetector
-from grasp.ingest.commits import RawCommit
+from unblur.config import UnblurConfig
+from unblur.ingest.ai_detect import AiDetector
+from unblur.ingest.commits import RawCommit
 
 
 def _c(message: str, name: str = "Alice", email: str = "a@x.com") -> RawCommit:
@@ -27,37 +27,37 @@ def _c(message: str, name: str = "Alice", email: str = "a@x.com") -> RawCommit:
     ],
 )
 def test_trailers_detected(trailer: str) -> None:
-    ev = AiDetector(GraspConfig()).evidence(_c(f"Fix bug\n\n{trailer}"))
+    ev = AiDetector(UnblurConfig()).evidence(_c(f"Fix bug\n\n{trailer}"))
     assert ev and ev[0].startswith("trailer:")
     assert trailer.split(":", 1)[1].strip() in ev[0]
 
 
 def test_human_coauthor_not_detected() -> None:
-    ev = AiDetector(GraspConfig()).evidence(_c("Pair\n\nCo-Authored-By: Bob <bob@x.com>"))
+    ev = AiDetector(UnblurConfig()).evidence(_c("Pair\n\nCo-Authored-By: Bob <bob@x.com>"))
     assert ev == []
 
 
 def test_trailer_must_start_line() -> None:
-    ev = AiDetector(GraspConfig()).evidence(_c("Docs: explain Co-Authored-By: Claude usage"))
+    ev = AiDetector(UnblurConfig()).evidence(_c("Docs: explain Co-Authored-By: Claude usage"))
     assert ev == []
 
 
 def test_message_patterns() -> None:
-    d = AiDetector(GraspConfig())
+    d = AiDetector(UnblurConfig())
     assert d.evidence(_c("Add x\n\nGenerated with Claude Code"))
     assert d.evidence(_c("\N{ROBOT FACE} refactor"))
     assert d.evidence(_c("Plain change")) == []
 
 
 def test_custom_regex() -> None:
-    cfg = GraspConfig(ai_message_patterns=[r"\[ai\]"])
+    cfg = UnblurConfig(ai_message_patterns=[r"\[ai\]"])
     d = AiDetector(cfg)
     assert d.evidence(_c("[AI] scaffold module")) == ["message matches /\\[ai\\]/"]
     assert d.evidence(_c("Generated with Claude Code")) == []
 
 
 def test_bot_authors() -> None:
-    d = AiDetector(GraspConfig())
+    d = AiDetector(UnblurConfig())
     # Dependency / CI bots are non-human but NOT AI-written
     dep = ("dependabot[bot]", "49699333+dependabot[bot]@users.noreply.github.com")
     assert d.is_bot(*dep) and d.evidence(_c("Bump", *dep)) == []
@@ -78,7 +78,7 @@ def test_bot_authors() -> None:
 
 
 def test_pr_label() -> None:
-    d = AiDetector(GraspConfig())
+    d = AiDetector(UnblurConfig())
     c = _c("Add feature (#12)")
     assert d.evidence(c, {12: ["AI-Generated"]}) == ["PR #12 labelled 'AI-Generated'"]
     assert d.evidence(c, {12: ["bug"]}) == []
@@ -86,7 +86,7 @@ def test_pr_label() -> None:
 
 
 def test_multiple_evidence_collected() -> None:
-    ev = AiDetector(GraspConfig()).evidence(
+    ev = AiDetector(UnblurConfig()).evidence(
         _c("x\n\n\N{ROBOT FACE} Generated with Claude Code\n\nCo-Authored-By: Claude <n@a.com>")
     )
     assert len(ev) == 3

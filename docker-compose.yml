@@ -9,26 +9,26 @@ services:
   api:
     build: { context: ., dockerfile: apps/api/Dockerfile }
     environment:
-      GRASP_MONGO_URL: mongodb://mongo:27017
-      GRASP_MONGO_DB: grasp
+      UNBLUR_MONGO_URL: mongodb://mongo:27017
+      UNBLUR_MONGO_DB: unblur
       HOST: 0.0.0.0
       # The api image has no Python/git: analyse with the worker service instead (see README).
-      GRASP_JOBS: "off"
+      UNBLUR_JOBS: "off"
     ports: ["127.0.0.1:4000:4000"]
     depends_on: [mongo]
   web:
     build: { context: ., dockerfile: apps/web/Dockerfile }
     environment:
-      GRASP_API_URL: http://api:4000
+      UNBLUR_API_URL: http://api:4000
     ports: ["127.0.0.1:5173:5173"]
     depends_on: [api]
   worker:
     build: ./worker
     env_file: { path: .env, required: false }
     environment:
-      GRASP_MONGO_URL: mongodb://mongo:27017
+      UNBLUR_MONGO_URL: mongodb://mongo:27017
     volumes:
-      - ${GRASP_REPOS_DIR:-./repos}:/repos:ro
+      - ${UNBLUR_REPOS_DIR:-./repos}:/repos:ro
     depends_on: [mongo, redis]
     profiles: [cli] # run on demand: docker compose run --rm worker analyze /repos/<name>
 volumes:

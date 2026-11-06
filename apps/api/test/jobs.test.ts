@@ -15,8 +15,8 @@ function fakeRunner(calls: string[][], dataDir: string, fail = new Set<string>()
   return async (args, onLine) => {
     calls.push(args);
     const source = args[2]!;
-    onLine("[grasp] Cloning " + source);
-    onLine("[grasp] Running git blame on 3 of 3 files");
+    onLine("[unblur] Cloning " + source);
+    onLine("[unblur] Running git blame on 3 of 3 files");
     if (fail.has(source)) {
       onLine("error: git clone --quiet failed: fatal: repository not found");
       return { code: 2 };
@@ -29,7 +29,7 @@ function fakeRunner(calls: string[][], dataDir: string, fail = new Set<string>()
     const outIdx = args.indexOf("--json");
     const out = outIdx > 0 ? args[outIdx + 1]! : path.join(dataDir, `${data.repo.name}.json`);
     await writeFile(out, JSON.stringify(data));
-    onLine(`[grasp] repo-id ${data.repo._id}`);
+    onLine(`[unblur] repo-id ${data.repo._id}`);
     return { code: 0 };
   };
 }
@@ -41,7 +41,7 @@ let queue: JobQueue;
 const calls: string[][] = [];
 
 beforeAll(async () => {
-  dir = await mkdtemp(path.join(os.tmpdir(), "grasp-jobs-"));
+  dir = await mkdtemp(path.join(os.tmpdir(), "unblur-jobs-"));
   await mkdir(path.join(dir, "checkout", ".git"), { recursive: true });
   await writeFile(path.join(dir, "demo.json"), JSON.stringify(fixture()));
   queue = new JobQueue({

@@ -5,12 +5,12 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from grasp.config import Weights
-from grasp.models import LearningTask, PullRequest, Review
-from grasp.scoring.score import comprehension, contributions, risk
-from grasp.signals.human_touch import FileCommit, decay, human_touch
-from grasp.signals.review import pr_index, pr_review_score, review_depth
-from grasp.signals.verified import verified
+from unblur.config import Weights
+from unblur.models import LearningTask, PullRequest, Review
+from unblur.scoring.score import comprehension, contributions, risk
+from unblur.signals.human_touch import FileCommit, decay, human_touch
+from unblur.signals.review import pr_index, pr_review_score, review_depth
+from unblur.signals.verified import verified
 
 NOW = datetime(2026, 11, 1, tzinfo=UTC)
 

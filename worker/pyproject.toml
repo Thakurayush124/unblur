@@ -1,7 +1,7 @@
 [project]
-name = "grasp-worker"
+name = "unblur-worker"
 version = "0.1.0"
-description = "Grasp analysis engine: measures comprehension debt in git repositories"
+description = "Unblur analysis engine: measures comprehension debt in git repositories"
 requires-python = ">=3.11"
 dependencies = [
   "pydantic>=2.6",

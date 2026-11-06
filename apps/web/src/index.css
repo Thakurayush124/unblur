@@ -5,9 +5,9 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /*
- * Grasp: "uncharted territory is hatched".
+ * Unblur: "uncharted territory is hatched".
  * Cool survey-grey paper, slate-navy ink, one chart-blue accent. Chart series 1-4 and the risk
- * scale keep their validated values (dataviz palette); only chrome tokens are Grasp's own.
+ * scale keep their validated values (dataviz palette); only chrome tokens are Unblur's own.
  */
 :root {
   color-scheme: light;

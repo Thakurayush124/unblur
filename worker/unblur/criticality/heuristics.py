@@ -6,8 +6,8 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
-from grasp.config import GraspConfig
-from grasp.ingest.files import IgnoreMatcher
+from unblur.config import UnblurConfig
+from unblur.ingest.files import IgnoreMatcher
 
 
 @dataclass
@@ -38,7 +38,7 @@ def heuristic_criticality(
     paths: list[str],
     fan_in: Mapping[str, int],
     churn: Mapping[str, int],
-    cfg: GraspConfig,
+    cfg: UnblurConfig,
 ) -> dict[str, Criticality]:
     pats = [re.compile(p, re.IGNORECASE) for p in cfg.critical_path_patterns]
     marked = IgnoreMatcher(cfg.critical_paths)

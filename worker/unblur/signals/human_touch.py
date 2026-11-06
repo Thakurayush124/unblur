@@ -14,7 +14,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 
-from grasp.models import Toucher
+from unblur.models import Toucher
 
 HALF_LIFE_DAYS = 120.0
 

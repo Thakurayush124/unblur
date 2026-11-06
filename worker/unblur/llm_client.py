@@ -1,11 +1,11 @@
-"""Provider-agnostic LLM wrapper. One env var holds the key: GRASP_LLM_API_KEY.
+"""Provider-agnostic LLM wrapper. One env var holds the key: UNBLUR_LLM_API_KEY.
 
-Providers (GRASP_LLM_PROVIDER):
+Providers (UNBLUR_LLM_PROVIDER):
   anthropic  Claude via the official `anthropic` SDK (optional dependency, imported lazily)
   gemini     Google AI Studio REST API (has a free tier) - stdlib HTTP, no extra deps
   openai     Any OpenAI-compatible /chat/completions endpoint - stdlib HTTP, no extra deps.
              Free options: Groq, OpenRouter ":free" models, or a local Ollama
-             (GRASP_LLM_BASE_URL=http://localhost:11434/v1, no key; code never leaves the machine).
+             (UNBLUR_LLM_BASE_URL=http://localhost:11434/v1, no key; code never leaves the machine).
 
 Nothing here is called unless a feature is explicitly opted in (see criticality/llm.py).
 """
@@ -72,7 +72,7 @@ class AnthropicClient:
         except ImportError as e:
             raise LlmError(
                 "provider 'anthropic' needs the SDK: pip install anthropic "
-                "(or use GRASP_LLM_PROVIDER=gemini / openai for a free option)"
+                "(or use UNBLUR_LLM_PROVIDER=gemini / openai for a free option)"
             ) from e
         client = anthropic.Anthropic(api_key=self.api_key) if self.api_key else anthropic.Anthropic()
         try:
@@ -140,19 +140,19 @@ class OpenAICompatClient:
 
 def get_client(env: dict[str, str] | None = None) -> LlmClient:
     env = dict(os.environ) if env is None else env
-    provider = env.get("GRASP_LLM_PROVIDER", "anthropic").strip().lower()
-    key = env.get("GRASP_LLM_API_KEY") or None
-    model = env.get("GRASP_LLM_MODEL") or DEFAULT_MODELS.get(provider, "")
-    base = env.get("GRASP_LLM_BASE_URL") or DEFAULT_BASE_URLS.get(provider, "")
+    provider = env.get("UNBLUR_LLM_PROVIDER", "anthropic").strip().lower()
+    key = env.get("UNBLUR_LLM_API_KEY") or None
+    model = env.get("UNBLUR_LLM_MODEL") or DEFAULT_MODELS.get(provider, "")
+    base = env.get("UNBLUR_LLM_BASE_URL") or DEFAULT_BASE_URLS.get(provider, "")
     if provider == "anthropic":
         return AnthropicClient(model=model, api_key=key)
     if provider == "gemini":
         if not key:
-            raise LlmError("GRASP_LLM_API_KEY is required for provider 'gemini'")
+            raise LlmError("UNBLUR_LLM_API_KEY is required for provider 'gemini'")
         return GeminiClient(model=model, api_key=key, base_url=base)
     if provider == "openai":
         return OpenAICompatClient(model=model, api_key=key, base_url=base)
-    raise LlmError(f"unknown GRASP_LLM_PROVIDER: {provider!r} (anthropic | gemini | openai)")
+    raise LlmError(f"unknown UNBLUR_LLM_PROVIDER: {provider!r} (anthropic | gemini | openai)")
 
 
 def extract_json(text: str) -> dict[str, Any]:

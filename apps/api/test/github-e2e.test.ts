@@ -144,7 +144,7 @@ function fakeGitHub(): Server {
           200,
           gh.comments.filter((c) => c.issue === issue),
         );
-      const c = { id: gh.nextId++, issue, body: body.body, user: { type: "Bot", login: "grasp[bot]" } };
+      const c = { id: gh.nextId++, issue, body: body.body, user: { type: "Bot", login: "unblur[bot]" } };
       gh.comments.push(c);
       return json(201, c);
     }
@@ -167,7 +167,7 @@ let jobs: JobQueue;
 const runs: { args: string[]; env?: Record<string, string> }[] = [];
 
 beforeAll(async () => {
-  dir = await mkdtemp(path.join(os.tmpdir(), "grasp-gh-"));
+  dir = await mkdtemp(path.join(os.tmpdir(), "unblur-gh-"));
   const data = fixture(); // src/auth/tokens.py risk 80, src/auth/session.py 70, src/ui/button.ts 5
   data.repo.remoteUrl = "https://github.com/acme/widgets";
   await writeFile(path.join(dir, "acme-widgets.json"), JSON.stringify(data));
@@ -193,7 +193,7 @@ beforeAll(async () => {
   });
   integration = new GitHubIntegration(client, store, jobs, {
     prDir: path.join(dir, ".github"),
-    publicUrl: "http://grasp.local",
+    publicUrl: "http://unblur.local",
   });
   api = createApp(store, { jobs, github: integration, webhookSecret: SECRET }).listen(0);
   base = `http://127.0.0.1:${(api.address() as AddressInfo).port}`;
@@ -303,7 +303,7 @@ describe("GitHub App webhooks", () => {
     expect(commentsOn(11)).toHaveLength(1);
     expect(commentsOn(11)[0]!.body).toContain(COMMENT_MARKER);
     expect(commentsOn(11)[0]!.body).toContain(
-      "http://grasp.local/#/file?repo=r_demo&path=src%2Fauth%2Ftokens.py",
+      "http://unblur.local/#/file?repo=r_demo&path=src%2Fauth%2Ftokens.py",
     );
 
     // author adds the section: still blocked (needs a verified review), same check + comment updated
@@ -323,7 +323,7 @@ describe("GitHub App webhooks", () => {
     gh.prs.get(11)!.reviews.push({
       user: { login: "carol", type: "User" },
       state: "COMMENTED",
-      body: "/grasp verified",
+      body: "/unblur verified",
       submitted_at: "2026-11-01T10:00:00Z",
     });
     await send("pull_request_review", {
@@ -334,11 +334,11 @@ describe("GitHub App webhooks", () => {
     });
     expect(checkFor("sha11")[0]!.conclusion).toBe("action_required");
 
-    // another reviewer approves with /grasp verified -> passes; the one comment says so
+    // another reviewer approves with /unblur verified -> passes; the one comment says so
     gh.prs.get(11)!.reviews.push({
       user: { login: "alice", type: "User" },
       state: "APPROVED",
-      body: "Walked through the refresh path. /grasp verified",
+      body: "Walked through the refresh path. /unblur verified",
       submitted_at: "2026-11-01T11:00:00Z",
     });
     await send("pull_request_review", {
@@ -350,7 +350,7 @@ describe("GitHub App webhooks", () => {
     [run] = checkFor("sha11");
     expect([run!.conclusion, run!.output.title]).toEqual(["success", "Comprehension verified by @alice"]);
     expect(commentsOn(11)).toHaveLength(1);
-    expect(commentsOn(11)[0]!.body).toContain("Grasp comprehension check passed");
+    expect(commentsOn(11)[0]!.body).toContain("Unblur comprehension check passed");
 
     // a new push gets a fresh check on the new head sha
     gh.prs.get(11)!.head.sha = "sha11b";

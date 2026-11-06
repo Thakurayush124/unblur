@@ -21,8 +21,8 @@ export const CHARACTERS: GuideCharacter[] = [
 ];
 
 export const DEFAULT_CHARACTER = "owl";
-const KEY = "grasp-guide";
-const EVENT = "grasp-guide-change";
+const KEY = "unblur-guide";
+const EVENT = "unblur-guide-change";
 
 export function sheets(id: string) {
   const base = `${import.meta.env.BASE_URL}mascots/${id}`;

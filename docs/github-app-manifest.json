@@ -1,5 +1,5 @@
 {
-  "name": "Grasp comprehension radar",
+  "name": "Unblur comprehension radar",
   "url": "https://github.com/",
   "description": "Measures comprehension debt and asks for a 'Why this works' explanation plus a verified review on PRs that touch high-risk code.",
   "public": false,

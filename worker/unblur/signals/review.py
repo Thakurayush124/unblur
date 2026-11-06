@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from grasp.models import PullRequest
+from unblur.models import PullRequest
 
 NEUTRAL = 0.5
 RUBBER_STAMP = 0.1

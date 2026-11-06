@@ -22,7 +22,7 @@ async function get(url: string) {
 }
 
 beforeAll(async () => {
-  dir = await mkdtemp(path.join(os.tmpdir(), "grasp-api-"));
+  dir = await mkdtemp(path.join(os.tmpdir(), "unblur-api-"));
   dataFile = path.join(dir, "demo.json");
   await writeFile(dataFile, JSON.stringify(fixture()));
   await writeFile(path.join(dir, "junk.json"), "{ not json");
@@ -86,7 +86,7 @@ describe("views", () => {
 });
 
 describe("HTTP API (JSON store)", () => {
-  it("lists repos and ignores non-Grasp files", async () => {
+  it("lists repos and ignores non-Unblur files", async () => {
     const { status, body } = await get("/repos");
     expect(status).toBe(200);
     expect(body).toEqual([
@@ -167,15 +167,15 @@ describe("HTTP API (JSON store)", () => {
 
 describe("static dashboard", () => {
   it("serves index.html for client routes from a relative webDist", async () => {
-    const web = await mkdtemp(path.join(os.tmpdir(), "grasp-web-"));
-    await writeFile(path.join(web, "index.html"), "<!doctype html><title>grasp</title>");
+    const web = await mkdtemp(path.join(os.tmpdir(), "unblur-web-"));
+    await writeFile(path.join(web, "index.html"), "<!doctype html><title>unblur</title>");
     const rel = path.relative(process.cwd(), web);
     const s = createApp(new JsonStore(dir), { webDist: rel }).listen(0);
     try {
       const url = `http://127.0.0.1:${(s.address() as AddressInfo).port}`;
       const res = await fetch(`${url}/some/client/route`);
       expect(res.status).toBe(200);
-      expect(await res.text()).toContain("<title>grasp</title>");
+      expect(await res.text()).toContain("<title>unblur</title>");
       expect((await fetch(`${url}/api/nope`)).status).toBe(404);
     } finally {
       await new Promise((r) => s.close(r));

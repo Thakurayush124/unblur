@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from fnmatch import fnmatchcase
 from pathlib import Path, PurePosixPath
 
-from grasp.config import GraspConfig
-from grasp.gitutil import empty_tree, git
+from unblur.config import UnblurConfig
+from unblur.gitutil import empty_tree, git
 
 
 @dataclass(frozen=True)
@@ -77,7 +77,7 @@ def _linguist_excluded(repo: str | Path, paths: list[str]) -> set[str]:
     return excluded
 
 
-def list_files(repo: str | Path, rev: str, cfg: GraspConfig) -> tuple[list[TrackedFile], int]:
+def list_files(repo: str | Path, rev: str, cfg: UnblurConfig) -> tuple[list[TrackedFile], int]:
     """Return (analysable files, number ignored). Binary files are always skipped."""
     out = git(repo, "diff", "--numstat", "-z", "--no-renames", empty_tree(repo), rev)
     ignore = IgnoreMatcher(cfg.ignore_globs)

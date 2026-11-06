@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import datetime
 
-from grasp.models import LearningTask
+from unblur.models import LearningTask
 
 FULL_DAYS = 180
 ZERO_DAYS = 365

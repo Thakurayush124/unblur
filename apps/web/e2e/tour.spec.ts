@@ -34,8 +34,8 @@ async function openDemo(page: Page, theme = "light") {
     ([id, t]) => {
       if (sessionStorage.getItem("seeded")) return;
       sessionStorage.setItem("seeded", "1");
-      localStorage.setItem("grasp-repo", id!);
-      localStorage.setItem("grasp-theme", t!);
+      localStorage.setItem("unblur-repo", id!);
+      localStorage.setItem("unblur-theme", t!);
     },
     [demo.id, theme],
   );
@@ -55,7 +55,7 @@ test("first visit: the guide walks through every section, then hands back contro
     // the highlighted section is on screen
     if (i === 0) await expect(page.locator('[data-tour="score"]')).toBeInViewport();
     if (i === 4) await expect(page.locator('[data-tour="treemap"]')).toBeInViewport({ ratio: 0.3 });
-    if (process.env.GRASP_SCREENSHOTS && [0, 4, 5, 7].includes(i)) {
+    if (process.env.UNBLUR_SCREENSHOTS && [0, 4, 5, 7].includes(i)) {
       await page.waitForTimeout(500);
       await page.screenshot({ path: `../../docs/screenshots/tour-step-${i + 1}.png` });
     }
@@ -95,9 +95,9 @@ test("keyboard: focus moves into the tour, arrows step, Esc closes and restores 
 
 test("guide picker: choose another character, then the tour uses it", async ({ page }) => {
   await openDemo(page);
-  await page.addInitScript(() => localStorage.setItem("grasp-tour-seen", "1"));
+  await page.addInitScript(() => localStorage.setItem("unblur-tour-seen", "1"));
   await page.goto("/#/settings");
-  const picker = page.getByRole("group", { name: /Pick who walks you through Grasp/ });
+  const picker = page.getByRole("group", { name: /Pick who walks you through Unblur/ });
   await expect(picker.getByRole("radio")).toHaveCount(6);
   await expect(picker.getByRole("radio", { name: /Ollie/ })).toBeChecked();
   await picker.getByText("Fenn").click();

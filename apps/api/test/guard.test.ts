@@ -67,18 +67,18 @@ describe("why-this-works section", () => {
 });
 
 describe("verified reviewer", () => {
-  it("needs an approval containing /grasp verified from someone other than the author", () => {
-    expect(verifiedBy([review("carol", "APPROVED", "/grasp verified")], "carol")).toBeNull();
+  it("needs an approval containing /unblur verified from someone other than the author", () => {
+    expect(verifiedBy([review("carol", "APPROVED", "/unblur verified")], "carol")).toBeNull();
     expect(verifiedBy([review("alice", "APPROVED", "LGTM")], "carol")).toBeNull();
-    expect(verifiedBy([review("alice", "COMMENTED", "/grasp verified")], "carol")).toBeNull();
-    expect(verifiedBy([review("alice", "APPROVED", "Read it twice. /GRASP VERIFIED")], "carol")).toBe(
+    expect(verifiedBy([review("alice", "COMMENTED", "/unblur verified")], "carol")).toBeNull();
+    expect(verifiedBy([review("alice", "APPROVED", "Read it twice. /UNBLUR VERIFIED")], "carol")).toBe(
       "alice",
     );
-    expect(verifiedBy([review("bot", "APPROVED", "/grasp verified", undefined, true)], "carol")).toBeNull();
+    expect(verifiedBy([review("bot", "APPROVED", "/unblur verified", undefined, true)], "carol")).toBeNull();
   });
 
   it("is withdrawn by a later change request or dismissal, not by a later comment", () => {
-    const ok = review("alice", "APPROVED", "/grasp verified", "2026-11-01T10:00:00Z");
+    const ok = review("alice", "APPROVED", "/unblur verified", "2026-11-01T10:00:00Z");
     expect(
       verifiedBy([ok, review("alice", "CHANGES_REQUESTED", "wait", "2026-11-01T11:00:00Z")], "carol"),
     ).toBeNull();
@@ -117,19 +117,19 @@ describe("evaluate", () => {
     expect(onlyWhy.state).toBe("action_required");
     expect(onlyWhy.why).toEqual({ present: true, sentences: 3, ok: true });
 
-    const onlyReview = evaluate(input({ reviews: [review("alice", "APPROVED", "/grasp verified")] }));
+    const onlyReview = evaluate(input({ reviews: [review("alice", "APPROVED", "/unblur verified")] }));
     expect(onlyReview.state).toBe("action_required");
 
     const shortWhy = evaluate(
       input({
         prBody: "## Why this works\nIt works for every caller.",
-        reviews: [review("alice", "APPROVED", "/grasp verified")],
+        reviews: [review("alice", "APPROVED", "/unblur verified")],
       }),
     );
     expect(shortWhy.state).toBe("action_required");
     expect(shortWhy.summary).toContain("only 1 sentence (need 3+)");
 
-    const ok = evaluate(input({ prBody: WHY, reviews: [review("alice", "APPROVED", "/grasp verified")] }));
+    const ok = evaluate(input({ prBody: WHY, reviews: [review("alice", "APPROVED", "/unblur verified")] }));
     expect([ok.state, ok.conclusion, ok.verifiedBy]).toEqual(["passed", "success", "alice"]);
   });
 
@@ -143,11 +143,11 @@ describe("evaluate", () => {
   });
 
   it("renders a single comment with the marker and links", () => {
-    const r = evaluate(input({ dashboardUrl: (p) => `http://grasp.local/#/file?path=${p}` }));
+    const r = evaluate(input({ dashboardUrl: (p) => `http://unblur.local/#/file?path=${p}` }));
     const body = commentBody(r, "carol");
     expect(body.startsWith(COMMENT_MARKER)).toBe(true);
     expect(body).toContain("@carol");
-    expect(body).toContain("[`src/auth/tokens.py`](http://grasp.local/#/file?path=src/auth/tokens.py)");
+    expect(body).toContain("[`src/auth/tokens.py`](http://unblur.local/#/file?path=src/auth/tokens.py)");
     expect(body).toContain("`## Why this works`");
   });
 });

@@ -8,5 +8,5 @@ RUN npm ci --workspace apps/web --include-workspace-root --no-audit --no-fund
 COPY apps/web apps/web
 RUN npm run build -w apps/web
 EXPOSE 5173
-# `vite preview` serves the static build and proxies /api to GRASP_API_URL.
+# `vite preview` serves the static build and proxies /api to UNBLUR_API_URL.
 CMD ["npx", "-w", "apps/web", "vite", "preview", "--host", "0.0.0.0", "--port", "5173"]

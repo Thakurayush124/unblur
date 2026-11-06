@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-from grasp.gitutil import git
+from unblur.gitutil import git
 
 _RS, _US = "\x1e", "\x1f"
 _FORMAT = _RS + _US.join(["%H", "%P", "%aN", "%aE", "%aI", "%B"]) + _US

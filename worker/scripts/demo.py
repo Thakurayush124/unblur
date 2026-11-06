@@ -21,10 +21,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from grasp.models import PullRequest, Review  # noqa: E402
-from grasp.pipeline import analyze  # noqa: E402
-from grasp.store import json_store  # noqa: E402
 from tests.fixture_repo import FixtureRepo  # noqa: E402
+from unblur.models import PullRequest, Review  # noqa: E402
+from unblur.pipeline import analyze  # noqa: E402
+from unblur.store import json_store  # noqa: E402
 
 NOW = datetime.now(UTC).replace(microsecond=0)
 DANA = ("Dana Founder", "dana@acme.dev")  # departed ~14 months ago
@@ -321,10 +321,10 @@ def rmtree(path: Path) -> None:
 
 
 def main() -> int:
-    grasp_root = ROOT.parent
+    unblur_root = ROOT.parent
     ap = argparse.ArgumentParser()
-    ap.add_argument("--repo", default=str(grasp_root / "repos" / "demo"))
-    ap.add_argument("--out", default=str(grasp_root / "data" / "demo.json"))
+    ap.add_argument("--repo", default=str(unblur_root / "repos" / "demo"))
+    ap.add_argument("--out", default=str(unblur_root / "data" / "demo.json"))
     args = ap.parse_args()
     repo, out = Path(args.repo), Path(args.out)
     if repo.exists():

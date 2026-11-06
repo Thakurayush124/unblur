@@ -17,6 +17,6 @@ export default defineConfig({
     url: `http://127.0.0.1:${PORT}/api/health`,
     reuseExistingServer: false,
     timeout: 120_000,
-    env: { PORT: String(PORT), GRASP_DATA_JSON: "e2e/.data", GRASP_WEB_DIST: "dist" },
+    env: { PORT: String(PORT), UNBLUR_DATA_JSON: "e2e/.data", UNBLUR_WEB_DIST: "dist" },
   },
 });

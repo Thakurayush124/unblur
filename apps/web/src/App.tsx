@@ -38,7 +38,7 @@ const NAV: { page: Page; label: string }[] = [
   { page: "people", label: "People" },
   { page: "settings", label: "Settings" },
 ];
-const REPO_KEY = "grasp-repo";
+const REPO_KEY = "unblur-repo";
 
 export default function App() {
   const route = useRoute();
@@ -96,7 +96,7 @@ export default function App() {
             <a
               href={href("overview")}
               className="flex items-center gap-2.5 pb-3"
-              aria-label="Grasp, overview"
+              aria-label="Unblur, overview"
             >
               {/* Mark: a square half surveyed, half hatched */}
               <span
@@ -106,7 +106,7 @@ export default function App() {
                 <span className="hatch absolute inset-0" />
                 <span className="absolute inset-y-0 left-0 w-1/2 bg-ink" />
               </span>
-              <span className="font-display text-xl font-semibold tracking-tight">Grasp</span>
+              <span className="font-display text-xl font-semibold tracking-tight">Unblur</span>
             </a>
             <nav aria-label="Main" className="order-last -mb-px flex w-full gap-6 sm:order-none sm:w-auto">
               {NAV.map((n) => (

@@ -43,7 +43,7 @@ export class JsonStore implements DataStore {
       try {
         raw = JSON.parse(await readFile(file, "utf-8")) as Record<string, unknown>;
       } catch {
-        continue; // partially written or not a Grasp file
+        continue; // partially written or not a Unblur file
       }
       if (!raw.repo || !Array.isArray(raw.fileScores)) continue;
       const data: RepoData = {

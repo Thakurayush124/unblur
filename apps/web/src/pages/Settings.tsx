@@ -226,7 +226,7 @@ function Editor({ initial, repoId }: { initial: SettingsResponse; repoId: string
             <span className="mt-1 block text-ink-2">
               Sends only the file path, its first 60 lines and exported symbol names to the configured
               provider. Every call is logged with bytes sent. It also needs{" "}
-              <code>GRASP_ALLOW_LLM_CODE=true</code> on the worker. Use a local Ollama model to keep code on
+              <code>UNBLUR_ALLOW_LLM_CODE=true</code> on the worker. Use a local Ollama model to keep code on
               your machine.
             </span>
           </span>
@@ -266,7 +266,7 @@ export default function SettingsPage() {
     <>
       <PageHeader
         title="Settings"
-        sub="Saved settings override the repo's .grasp.json and take effect on the next analysis run."
+        sub="Saved settings override the repo's .unblur.json and take effect on the next analysis run."
       />
       <Load state={state}>{(s) => <Editor key={key} initial={s} repoId={repoId} />}</Load>
       <div className="mt-6">
@@ -284,7 +284,7 @@ function GuidePicker() {
     <Card title="Your guide" id="guide-h" variant="panel">
       <fieldset>
         <legend className="mb-3 text-sm text-ink-2">
-          Pick who walks you through Grasp. Saved in this browser.
+          Pick who walks you through Unblur. Saved in this browser.
         </legend>
         <div className="flex flex-wrap gap-3">
           {CHARACTERS.map((c) => {

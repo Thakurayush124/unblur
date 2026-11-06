@@ -8,8 +8,8 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from datetime import datetime
 
-from grasp.config import Weights
-from grasp.models import FileScore, ModuleScore, Snapshot
+from unblur.config import Weights
+from unblur.models import FileScore, ModuleScore, Snapshot
 
 
 def clamp(x: float, lo: float = 0.0, hi: float = 1.0) -> float:

@@ -7,7 +7,7 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-from grasp.gitutil import GitError, git
+from unblur.gitutil import GitError, git
 
 # https://host/owner/repo(.git), ssh://..., git://..., or scp-style git@host:owner/repo(.git)
 _REMOTE = re.compile(r"^(?:https?://|ssh://|git://)[\w.@:-]+/[\w./~-]+$|^[\w.-]+@[\w.-]+:[\w./~-]+$")

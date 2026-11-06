@@ -1,6 +1,6 @@
 """Optional LLM criticality classification.
 
-Double opt-in: repo setting `llmCriticality: true` AND env `GRASP_ALLOW_LLM_CODE=true`.
+Double opt-in: repo setting `llmCriticality: true` AND env `UNBLUR_ALLOW_LLM_CODE=true`.
 Sends ONLY: file path, first 60 lines, exported symbol names. Results are cached by content
 hash; every real call is appended to the audit log (file, bytes sent, provider, model).
 """
@@ -13,9 +13,9 @@ import re
 from collections.abc import Callable, Mapping
 from datetime import datetime
 
-from grasp.config import GraspConfig
-from grasp.llm_client import LlmClient, LlmError, extract_json, get_client
-from grasp.models import LlmAuditEntry, LlmCacheEntry
+from unblur.config import UnblurConfig
+from unblur.llm_client import LlmClient, LlmError, extract_json, get_client
+from unblur.models import LlmAuditEntry, LlmCacheEntry
 
 HEAD_LINES = 60
 _PY_EXPORT = re.compile(r"^(?:async\s+)?(?:def|class)\s+([A-Za-z]\w*)", re.MULTILINE)
@@ -36,9 +36,9 @@ First {n} lines:
 ```"""
 
 
-def llm_allowed(cfg: GraspConfig, env: Mapping[str, str] | None = None) -> bool:
+def llm_allowed(cfg: UnblurConfig, env: Mapping[str, str] | None = None) -> bool:
     env = os.environ if env is None else env
-    return cfg.llm_criticality and env.get("GRASP_ALLOW_LLM_CODE", "").lower() == "true"
+    return cfg.llm_criticality and env.get("UNBLUR_ALLOW_LLM_CODE", "").lower() == "true"
 
 
 def exported_symbols(path: str, src: str) -> list[str]:

@@ -18,7 +18,7 @@ import { Portrait } from "../guide/Portrait";
 import { href, navigate, parse } from "../router";
 import { TOUR_STEPS, type TourStep } from "./steps";
 
-export const TOUR_SEEN_KEY = "grasp-tour-seen";
+export const TOUR_SEEN_KEY = "unblur-tour-seen";
 
 interface TourCtx {
   active: boolean;

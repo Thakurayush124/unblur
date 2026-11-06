@@ -7,7 +7,7 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 repos/
-*.grasp.json.tmp
+*.unblur.json.tmp
 out*.json
 data/
 *.settings.json

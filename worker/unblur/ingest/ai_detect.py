@@ -5,12 +5,12 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping, Sequence
 
-from grasp.config import GraspConfig
-from grasp.ingest.commits import RawCommit
+from unblur.config import UnblurConfig
+from unblur.ingest.commits import RawCommit
 
 
 class AiDetector:
-    def __init__(self, cfg: GraspConfig) -> None:
+    def __init__(self, cfg: UnblurConfig) -> None:
         flags = re.IGNORECASE | re.MULTILINE
         self._trailers = [re.compile(p, flags) for p in cfg.ai_trailer_patterns]
         self._messages = [re.compile(p, flags) for p in cfg.ai_message_patterns]

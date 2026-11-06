@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from grasp.ingest import source
-from grasp.ingest.source import ensure_clone, is_remote, slug_for, validate_remote
 from tests.fixture_repo import CLAUDE, FixtureRepo, lines
+from unblur.ingest import source
+from unblur.ingest.source import ensure_clone, is_remote, slug_for, validate_remote
 
 
 @pytest.mark.parametrize(
@@ -43,7 +43,7 @@ def test_unsafe_or_local_rejected(bad: str) -> None:
 
 
 def test_display_names() -> None:
-    from grasp.ingest.source import display_name
+    from unblur.ingest.source import display_name
 
     assert display_name("https://github.com/pallets/click.git") == "pallets/click"
     assert display_name("git@github.com:owner/repo") == "owner/repo"
@@ -98,5 +98,5 @@ def test_cli_data_dir_slug_and_progress(tmp_path: Path, capsys: pytest.CaptureFi
     out = list((tmp_path / "data").glob("My-Repo-*.json"))
     assert len(out) == 1 and json.loads(out[0].read_text(encoding="utf-8"))["repo"]["name"] == "My Repo"
     err = capsys.readouterr().err
-    assert "[grasp] Reading commit history" in err and "[grasp] Saving results" in err
+    assert "[unblur] Reading commit history" in err and "[unblur] Saving results" in err
     subprocess.run(["git", "--version"], check=True, capture_output=True)

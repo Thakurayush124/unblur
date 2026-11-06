@@ -29,7 +29,7 @@ export interface IntegrationOptions {
   backfillLimit?: number;
 }
 
-/** PullRequest document in the worker's camelCase schema (worker/grasp/models.py). */
+/** PullRequest document in the worker's camelCase schema (worker/unblur/models.py). */
 export interface WorkerPullRequest {
   repoId: string;
   number: number;
@@ -250,7 +250,7 @@ export class GitHubIntegration {
       const ref = { installationId, owner, name, htmlUrl: `${this.webUrl}/${owner}/${name}` };
       const n = await this.backfill(ref);
       await this.analyse(ref);
-      console.log(`grasp github: onboarded ${full} (${n} merged PRs backfilled)`);
+      console.log(`unblur github: onboarded ${full} (${n} merged PRs backfilled)`);
     }
     return `onboarded ${fullNames.length} repo(s)`;
   }
@@ -424,7 +424,7 @@ export class GitHubIntegration {
     else await this.gh.request(ref.installationId, "POST", `${base}/check-runs`, { ...body, head_sha: sha });
   }
 
-  /** Exactly one Grasp comment per PR: created when action is first required, then edited in place. */
+  /** Exactly one Unblur comment per PR: created when action is first required, then edited in place. */
   private async upsertComment(ref: RepoRef, number: number, result: GuardResult, author: string) {
     if (result.state !== "action_required" && result.state !== "passed") return;
     const base = `/repos/${ref.owner}/${ref.name}`;

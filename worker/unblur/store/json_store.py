@@ -5,7 +5,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from grasp.models import AnalysisResult
+from unblur.models import AnalysisResult
 
 
 def load(out_path: str | Path, repo_path: str | Path) -> AnalysisResult | None:

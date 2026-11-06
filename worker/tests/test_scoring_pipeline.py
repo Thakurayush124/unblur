@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from grasp.config import GraspConfig
-from grasp.models import AnalysisResult, FileScore, PullRequest, Review
-from grasp.pipeline import analyze
 from tests.conftest import AS_OF
 from tests.fixture_repo import CLAUDE, FixtureRepo, build_demo_repo, lines
+from unblur.config import UnblurConfig
+from unblur.models import AnalysisResult, FileScore, PullRequest, Review
+from unblur.pipeline import analyze
 
 ALICE = ("Alice Human", "alice@example.com")
 BOB = ("Bob Gone", "bob@example.com")
@@ -144,7 +144,7 @@ def test_weights_from_config_change_scores(tmp_path: Path) -> None:
     r = build_demo_repo(tmp_path / "demo")
     base = analyze(r.path, as_of=AS_OF)
     heavy_a = analyze(
-        r.path, GraspConfig.model_validate({"weights": {"wA": 1, "wR": 0, "wH": 0, "wE": 0}}), as_of=AS_OF
+        r.path, UnblurConfig.model_validate({"weights": {"wA": 1, "wR": 0, "wH": 0, "wE": 0}}), as_of=AS_OF
     )
     f0, f1 = _f(base, "src/auth/tokens.py"), _f(heavy_a, "src/auth/tokens.py")
     assert f1.comprehension == 0.0 and f0.comprehension == 10.0  # only R=0.5 * 0.2
@@ -161,10 +161,10 @@ def test_llm_criticality_wired_with_fake_client(tmp_path: Path) -> None:
             calls.append(prompt)
             return '{"criticality": 1.0, "reason": "core request loop"}'
 
-    cfg = GraspConfig(llm_criticality=True, llm_max_files=2)
+    cfg = UnblurConfig(llm_criticality=True, llm_max_files=2)
     off = analyze(r.path, cfg, as_of=AS_OF, env={}, llm_client_factory=Fake)
     assert calls == [] and off.llm_audit == []
-    on = analyze(r.path, cfg, as_of=AS_OF, env={"GRASP_ALLOW_LLM_CODE": "true"}, llm_client_factory=Fake)
+    on = analyze(r.path, cfg, as_of=AS_OF, env={"UNBLUR_ALLOW_LLM_CODE": "true"}, llm_client_factory=Fake)
     assert len(calls) == 2 and len(on.llm_audit) == 2
     bumped = [f for f in on.file_scores if f.criticality == 1.0]
     assert len(bumped) == 2 and bumped[0].criticality_reasons[0] == "LLM: core request loop"

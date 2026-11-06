@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * Settings the dashboard can edit. Keys match the worker's GraspConfig (camelCase), so the
+ * Settings the dashboard can edit. Keys match the worker's UnblurConfig (camelCase), so the
  * saved object is passed to the worker as config overrides on its next run.
  */
 function isValidRegex(s: string): boolean {

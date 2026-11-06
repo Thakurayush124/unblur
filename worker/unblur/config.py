@@ -1,4 +1,4 @@
-"""Per-repo configuration. Everything here is overridable via `.grasp.json` or `--config`."""
+"""Per-repo configuration. Everything here is overridable via `.unblur.json` or `--config`."""
 
 from __future__ import annotations
 
@@ -71,7 +71,7 @@ class Weights(BaseModel):
     w_e: float = 0.20
 
 
-class GraspConfig(BaseModel):
+class UnblurConfig(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     ai_trailer_patterns: list[str] = Field(default_factory=lambda: list(DEFAULT_AI_TRAILER_PATTERNS))
@@ -93,7 +93,7 @@ class GraspConfig(BaseModel):
     criticality_floor: float = 0.1
     # Import specifier prefixes mapped to repo paths (e.g. TS path aliases)
     import_aliases: dict[str, str] = Field(default_factory=lambda: {"@/": "src/", "~/": "src/"})
-    # Opt-in LLM criticality. ALSO requires env GRASP_ALLOW_LLM_CODE=true.
+    # Opt-in LLM criticality. ALSO requires env UNBLUR_ALLOW_LLM_CODE=true.
     llm_criticality: bool = False
     llm_max_files: int = 200
     weights: Weights = Field(default_factory=Weights)
@@ -109,9 +109,12 @@ class GraspConfig(BaseModel):
         repo_path: str | Path,
         explicit: str | Path | None = None,
         overrides: dict[str, Any] | None = None,
-    ) -> GraspConfig:
-        """Defaults < `<repo>/.grasp.json` (or `explicit`) < dashboard `overrides`."""
-        path = Path(explicit) if explicit else Path(repo_path) / ".grasp.json"
+    ) -> UnblurConfig:
+        """Defaults < `<repo>/.unblur.json` (or `explicit`) < dashboard `overrides`."""
+        path = Path(explicit) if explicit else Path(repo_path) / ".unblur.json"
+        legacy = Path(repo_path) / ".grasp.json"  # name before the rename to Unblur
+        if not explicit and not path.is_file() and legacy.is_file():
+            path = legacy
         data: dict[str, Any] = {}
         if path.is_file():
             data = json.loads(path.read_text(encoding="utf-8"))

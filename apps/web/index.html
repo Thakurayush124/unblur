@@ -4,11 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
-    <title>Grasp: comprehension debt radar</title>
+    <title>Unblur: comprehension debt radar</title>
     <script>
       // Apply the theme before first paint to avoid a flash.
       (function () {
-        var t = localStorage.getItem("grasp-theme") || "system";
+        // One-time carry-over of preferences saved before the rename (Grasp -> Unblur).
+        ["theme", "repo", "tour-seen", "guide"].forEach(function (k) {
+          var old = localStorage.getItem("grasp-" + k);
+          if (old !== null && localStorage.getItem("unblur-" + k) === null) localStorage.setItem("unblur-" + k, old);
+        });
+        var t = localStorage.getItem("unblur-theme") || "system";
         if (t === "system") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         document.documentElement.dataset.theme = t;
       })();

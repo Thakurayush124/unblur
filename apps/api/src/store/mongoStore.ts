@@ -1,5 +1,5 @@
 /**
- * Reads the collections the worker writes (see worker/grasp/store/mongo_store.py).
+ * Reads the collections the worker writes (see worker/unblur/store/mongo_store.py).
  * Dashboard settings live on the repo document as `settings`; the worker merges them into
  * its config on the next Mongo-mode run.
  */
@@ -14,7 +14,7 @@ export class MongoStore implements DataStore {
   // Invalidated whenever the worker writes a new analysis (lastAnalyzedSha/At change).
   private cache = new Map<string, { key: string; data: RepoData }>();
 
-  constructor(url: string, dbName = "grasp") {
+  constructor(url: string, dbName = "unblur") {
     this.conn = mongoose.createConnection(url, { dbName });
   }
 

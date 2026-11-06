@@ -23,6 +23,6 @@ e2e:
 	npm run e2e
 
 lint:
-	cd worker && python -m ruff check . && python -m mypy grasp cli.py
+	cd worker && python -m ruff check . && python -m mypy unblur cli.py
 	npm run lint
 	npm run typecheck

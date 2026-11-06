@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from grasp.models import (
+from unblur.models import (
     AnalysisResult,
     Commit,
     Contributor,
@@ -29,7 +29,7 @@ def _db(url: str, db_name: str) -> Any:
     try:
         from pymongo import MongoClient
     except ImportError as e:  # pragma: no cover
-        raise SystemExit("Mongo mode needs pymongo: pip install 'grasp-worker[mongo]'") from e
+        raise SystemExit("Mongo mode needs pymongo: pip install 'unblur-worker[mongo]'") from e
     return MongoClient(url, tz_aware=True)[db_name]
 
 
@@ -38,14 +38,14 @@ def _dump(doc: Any) -> dict[str, Any]:
     return out
 
 
-def load_overrides(url: str, repo_path: str | Path, db_name: str = "grasp") -> dict[str, Any]:
+def load_overrides(url: str, repo_path: str | Path, db_name: str = "unblur") -> dict[str, Any]:
     db = _db(url, db_name)
     doc = db.repos.find_one({"path": Path(repo_path).resolve().as_posix()}, {"settings": 1})
     settings = (doc or {}).get("settings") or {}
     return settings if isinstance(settings, dict) else {}
 
 
-def load(url: str, repo_path: str | Path, db_name: str = "grasp") -> AnalysisResult | None:
+def load(url: str, repo_path: str | Path, db_name: str = "unblur") -> AnalysisResult | None:
     db = _db(url, db_name)
     repo_doc = db.repos.find_one({"path": Path(repo_path).resolve().as_posix()})
     if not repo_doc:
@@ -71,7 +71,7 @@ def load(url: str, repo_path: str | Path, db_name: str = "grasp") -> AnalysisRes
 def save(
     result: AnalysisResult,
     url: str,
-    db_name: str = "grasp",
+    db_name: str = "unblur",
     previous_audit_len: int = 0,
 ) -> None:
     from pymongo import ReplaceOne

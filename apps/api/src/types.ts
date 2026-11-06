@@ -99,7 +99,7 @@ export interface Snapshot {
   perModule: ModuleScore[];
 }
 
-/** Effective worker config (GraspConfig) as used for the last analysis. */
+/** Effective worker config (UnblurConfig) as used for the last analysis. */
 export type WorkerConfig = Record<string, unknown>;
 
 export interface RepoData {

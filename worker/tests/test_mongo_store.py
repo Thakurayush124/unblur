@@ -1,5 +1,5 @@
-"""Round-trip through a real Mongo. Skipped unless GRASP_TEST_MONGO_URL is set, e.g.
-docker run -d -p 27017:27017 mongo:7 && GRASP_TEST_MONGO_URL=mongodb://localhost:27017 pytest
+"""Round-trip through a real Mongo. Skipped unless UNBLUR_TEST_MONGO_URL is set, e.g.
+docker run -d -p 27017:27017 mongo:7 && UNBLUR_TEST_MONGO_URL=mongodb://localhost:27017 pytest
 """
 
 from __future__ import annotations
@@ -10,20 +10,20 @@ from pathlib import Path
 
 import pytest
 
-from grasp.pipeline import analyze
 from tests.conftest import AS_OF
 from tests.fixture_repo import build_demo_repo
+from unblur.pipeline import analyze
 
-URL = os.environ.get("GRASP_TEST_MONGO_URL")
-pytestmark = pytest.mark.skipif(not URL, reason="GRASP_TEST_MONGO_URL not set")
+URL = os.environ.get("UNBLUR_TEST_MONGO_URL")
+pytestmark = pytest.mark.skipif(not URL, reason="UNBLUR_TEST_MONGO_URL not set")
 
 
 def test_mongo_roundtrip_incremental(tmp_path: Path) -> None:
     pytest.importorskip("pymongo")
-    from grasp.store import mongo_store
+    from unblur.store import mongo_store
 
     assert URL
-    db = f"grasp_test_{uuid.uuid4().hex[:8]}"
+    db = f"unblur_test_{uuid.uuid4().hex[:8]}"
     r = build_demo_repo(tmp_path / "demo")
     try:
         first = analyze(r.path, as_of=AS_OF)

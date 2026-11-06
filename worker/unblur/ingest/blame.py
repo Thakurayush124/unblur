@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from grasp.gitutil import git
+from unblur.gitutil import git
 
 _HEADER = re.compile(r"^([0-9a-f]{40}|[0-9a-f]{64}) \d+ \d+")
 

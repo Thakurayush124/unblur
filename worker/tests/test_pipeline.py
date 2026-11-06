@@ -5,13 +5,13 @@ from pathlib import Path
 
 import pytest
 
-from grasp.config import GraspConfig
-from grasp.ingest import blame as blame_mod
-from grasp.ingest.files import IgnoreMatcher, module_for
-from grasp.models import AnalysisResult, FileScore
-from grasp.pipeline import analyze
 from tests.conftest import AS_OF
 from tests.fixture_repo import CLAUDE, FixtureRepo, build_demo_repo, lines
+from unblur.config import UnblurConfig
+from unblur.ingest import blame as blame_mod
+from unblur.ingest.files import IgnoreMatcher, module_for
+from unblur.models import AnalysisResult, FileScore
+from unblur.pipeline import analyze
 
 
 def _file(result: AnalysisResult, path: str) -> FileScore:
@@ -71,7 +71,7 @@ def test_ignored_and_binary_files(repo: FixtureRepo) -> None:
 
 def test_custom_ignore_globs(repo: FixtureRepo) -> None:
     repo.commit("x", {"src/a.py": lines("a", 3), "docs/guide/x.md": lines("b", 3)})
-    cfg = GraspConfig(ignore_globs=["docs/**"])
+    cfg = UnblurConfig(ignore_globs=["docs/**"])
     assert [f.path for f in analyze(repo.path, cfg, as_of=AS_OF).file_scores] == ["src/a.py"]
 
 
@@ -186,3 +186,13 @@ def test_cli_applies_dashboard_overrides(tmp_path: Path) -> None:
     assert data["config"]["criticalPaths"] == ["README.md"]
     readme = next(f for f in data["fileScores"] if f["path"] == "README.md")
     assert readme["criticality"] == 1.0 and readme["comprehension"] == 100.0
+
+
+def test_legacy_grasp_config_file_still_read(repo: FixtureRepo) -> None:
+    """Repos configured before the rename (Grasp -> Unblur) keep working."""
+    repo.commit("x", {"src/a.py": lines("a", 3), "docs/x.md": lines("b", 3)})
+    (repo.path / ".grasp.json").write_text(json.dumps({"ignoreGlobs": ["docs/**"]}), encoding="utf-8")
+    cfg = UnblurConfig.load(repo.path)
+    assert cfg.ignore_globs == ["docs/**"]
+    (repo.path / ".unblur.json").write_text(json.dumps({"ignoreGlobs": []}), encoding="utf-8")
+    assert UnblurConfig.load(repo.path).ignore_globs == []  # the new name wins

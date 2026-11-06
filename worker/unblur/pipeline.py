@@ -15,20 +15,20 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from grasp.config import GraspConfig
-from grasp.criticality.heuristics import heuristic_criticality
-from grasp.criticality.imports import fan_in, is_import_source
-from grasp.criticality.llm import classify, llm_allowed
-from grasp.gitutil import current_branch, git, head_sha, is_ancestor
-from grasp.ingest.ai_detect import AiDetector
-from grasp.ingest.blame import blame_many
-from grasp.ingest.commits import RawCommit, read_commits_by_sha, read_log
-from grasp.ingest.contents import read_blobs
-from grasp.ingest.contributors import is_active, resolve
-from grasp.ingest.files import list_files, module_for
-from grasp.ingest.source import display_name
-from grasp.llm_client import LlmClient, get_client
-from grasp.models import (
+from unblur.config import UnblurConfig
+from unblur.criticality.heuristics import heuristic_criticality
+from unblur.criticality.imports import fan_in, is_import_source
+from unblur.criticality.llm import classify, llm_allowed
+from unblur.gitutil import current_branch, git, head_sha, is_ancestor
+from unblur.ingest.ai_detect import AiDetector
+from unblur.ingest.blame import blame_many
+from unblur.ingest.commits import RawCommit, read_commits_by_sha, read_log
+from unblur.ingest.contents import read_blobs
+from unblur.ingest.contributors import is_active, resolve
+from unblur.ingest.files import list_files, module_for
+from unblur.ingest.source import display_name
+from unblur.llm_client import LlmClient, get_client
+from unblur.models import (
     AiSource,
     AnalysisResult,
     Commit,
@@ -40,11 +40,11 @@ from grasp.models import (
     RunStats,
     Signals,
 )
-from grasp.scoring import score as scoring
-from grasp.scoring.explain import explain
-from grasp.signals.human_touch import FileCommit, human_touch
-from grasp.signals.review import pr_index, review_depth
-from grasp.signals.verified import verified
+from unblur.scoring import score as scoring
+from unblur.scoring.explain import explain
+from unblur.signals.human_touch import FileCommit, human_touch
+from unblur.signals.review import pr_index, review_depth
+from unblur.signals.verified import verified
 
 TOP_OWNERS = 5
 TOP_AI_SOURCES = 10
@@ -74,7 +74,7 @@ def _changed_paths(repo: Path, old: str, new: str) -> set[str]:
 
 def analyze(
     repo_path: str | Path,
-    cfg: GraspConfig | None = None,
+    cfg: UnblurConfig | None = None,
     *,
     since_days: int | None = None,
     as_of: datetime | None = None,
@@ -91,7 +91,7 @@ def analyze(
     say = progress or (lambda _msg: None)
     remote_url = remote_url or (previous.repo.remote_url if previous else None)
     repo = Path(repo_path).resolve()
-    cfg = cfg or GraspConfig.load(repo)
+    cfg = cfg or UnblurConfig.load(repo)
     as_of = as_of or datetime.now(UTC)
     head = head_sha(repo)
     rid = repo_id_for(repo)

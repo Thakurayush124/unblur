@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from grasp.pipeline import analyze
 from tests.conftest import AS_OF
+from unblur.pipeline import analyze
 
 N_FILES, LINES_PER_FILE, N_COMMITS = 500, 100, 400
 

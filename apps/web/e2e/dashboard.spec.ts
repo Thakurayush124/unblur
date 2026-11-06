@@ -5,11 +5,11 @@ async function useRepo(page: Page, id: string, theme = "light") {
   await page.addInitScript(
     ([repo, t]) => {
       // Seed once per test (each test has a fresh context), so reloads keep user changes.
-      if (localStorage.getItem("grasp-e2e-seeded")) return;
-      localStorage.setItem("grasp-e2e-seeded", "1");
-      localStorage.setItem("grasp-repo", repo!);
-      localStorage.setItem("grasp-theme", t!);
-      localStorage.setItem("grasp-tour-seen", "1"); // the first-visit tour has its own spec
+      if (localStorage.getItem("unblur-e2e-seeded")) return;
+      localStorage.setItem("unblur-e2e-seeded", "1");
+      localStorage.setItem("unblur-repo", repo!);
+      localStorage.setItem("unblur-theme", t!);
+      localStorage.setItem("unblur-tour-seen", "1"); // the first-visit tour has its own spec
     },
     [id, theme],
   );

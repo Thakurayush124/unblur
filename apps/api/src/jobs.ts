@@ -48,7 +48,7 @@ export interface JobOptions {
 
 const LOG_LINES = 60;
 const KEEP_JOBS = 50;
-// Same rules as worker/grasp/ingest/source.py.
+// Same rules as worker/unblur/ingest/source.py.
 const REMOTE = /^(?:https?:\/\/|ssh:\/\/|git:\/\/)[\w.@:-]+\/[\w./~-]+$|^[\w.-]+@[\w.-]+:[\w./~-]+$/;
 
 export function isRemote(source: string): boolean {
@@ -171,7 +171,7 @@ export class JobQueue {
     if (out) a.push("--json", out);
     else if (this.opts.dataDir) a.push("--data-dir", this.opts.dataDir);
     else if (this.opts.mongoUrl)
-      a.push("--mongo-url", this.opts.mongoUrl, "--mongo-db", this.opts.mongoDb ?? "grasp");
+      a.push("--mongo-url", this.opts.mongoUrl, "--mongo-db", this.opts.mongoDb ?? "unblur");
     if (job.full) a.push("--full");
     return a;
   }
@@ -194,7 +194,7 @@ export class JobQueue {
         (line) => {
           job.log.push(line);
           if (job.log.length > LOG_LINES) job.log.shift();
-          const m = /^\[grasp\] (.*)$/.exec(line);
+          const m = /^\[unblur\] (.*)$/.exec(line);
           if (!m) return;
           const id = /^repo-id (\S+)$/.exec(m[1]!);
           if (id) job.repoId = id[1]!;

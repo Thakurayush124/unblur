@@ -15,7 +15,7 @@ export default function AddRepoPage() {
     <>
       <PageHeader
         title="Add a repository"
-        sub="Paste a git URL (public, or private if your git credentials can reach it) or a local checkout path. Grasp clones it, reads its history and git blame, and scores it. Source code stays on this machine."
+        sub="Paste a git URL (public, or private if your git credentials can reach it) or a local checkout path. Unblur clones it, reads its history and git blame, and scores it. Source code stays on this machine."
       />
       <Load state={caps}>
         {(c) => (c.addRepos ? <AddForm caps={c} /> : <Notice tone="warn">{c.reason}</Notice>)}
@@ -170,7 +170,7 @@ function GitHubPanel() {
             <>
               <p className="text-sm text-ink-2">
                 Connected as App <code>{s.appId}</code>. Installing it on a repository backfills merged PRs
-                and reviews, analyses the repo, and adds the <strong>Grasp: comprehension check</strong> to
+                and reviews, analyses the repo, and adds the <strong>Unblur: comprehension check</strong> to
                 PRs that touch high-risk files.
               </p>
               {s.events.length > 0 ? (

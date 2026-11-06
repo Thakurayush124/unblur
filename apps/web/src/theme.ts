@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 export type ThemeChoice = "system" | "light" | "dark";
-const KEY = "grasp-theme";
+const KEY = "unblur-theme";
 const media = () => window.matchMedia("(prefers-color-scheme: dark)");
 
 function resolve(choice: ThemeChoice): "light" | "dark" {

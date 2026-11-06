@@ -1,7 +1,7 @@
 import { test } from "@playwright/test";
 
-// Regenerates the README screenshots:  GRASP_SCREENSHOTS=1 npx playwright test screenshots
-test.skip(!process.env.GRASP_SCREENSHOTS, "set GRASP_SCREENSHOTS=1 to regenerate docs/screenshots");
+// Regenerates the README screenshots:  UNBLUR_SCREENSHOTS=1 npx playwright test screenshots
+test.skip(!process.env.UNBLUR_SCREENSHOTS, "set UNBLUR_SCREENSHOTS=1 to regenerate docs/screenshots");
 
 const OUT = "../../docs/screenshots";
 const shots: [string, string, "light" | "dark"][] = [
@@ -19,9 +19,9 @@ for (const [name, url, theme] of shots) {
     const demo = repos.find((r) => r.name === "demo-repo")!;
     await page.addInitScript(
       ([id, t]) => {
-        localStorage.setItem("grasp-repo", id!);
-        localStorage.setItem("grasp-theme", t!);
-        localStorage.setItem("grasp-tour-seen", "1");
+        localStorage.setItem("unblur-repo", id!);
+        localStorage.setItem("unblur-theme", t!);
+        localStorage.setItem("unblur-tour-seen", "1");
       },
       [demo.id, theme],
     );

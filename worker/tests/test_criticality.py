@@ -5,25 +5,25 @@ from typing import Any
 
 import pytest
 
-from grasp.config import GraspConfig
-from grasp.criticality.heuristics import heuristic_criticality, percentiles
-from grasp.criticality.imports import fan_in
-from grasp.criticality.llm import build_prompt, classify, exported_symbols, llm_allowed
-from grasp.llm_client import (
+from unblur.config import UnblurConfig
+from unblur.criticality.heuristics import heuristic_criticality, percentiles
+from unblur.criticality.imports import fan_in
+from unblur.criticality.llm import build_prompt, classify, exported_symbols, llm_allowed
+from unblur.llm_client import (
     GeminiClient,
     LlmError,
     OpenAICompatClient,
     extract_json,
     get_client,
 )
-from grasp.models import LlmAuditEntry, LlmCacheEntry
+from unblur.models import LlmAuditEntry, LlmCacheEntry
 
 NOW = datetime(2026, 11, 1, tzinfo=UTC)
 
 
 # ---- path heuristics + percentiles -------------------------------------------
 def test_path_heuristics_and_floor() -> None:
-    cfg = GraspConfig()
+    cfg = UnblurConfig()
     c = heuristic_criticality(
         ["src/auth/login.ts", "src/ui/Button.tsx", "db/Migrations/001.sql"], {}, {}, cfg
     )
@@ -34,7 +34,7 @@ def test_path_heuristics_and_floor() -> None:
 
 
 def test_configured_critical_paths_win() -> None:
-    cfg = GraspConfig(critical_paths=["src/ledger/"], critical_path_patterns=[])
+    cfg = UnblurConfig(critical_paths=["src/ledger/"], critical_path_patterns=[])
     c = heuristic_criticality(["src/ledger/post.py", "src/x.py"], {}, {}, cfg)
     assert c["src/ledger/post.py"].value == 1.0
     assert c["src/x.py"].value == cfg.criticality_floor
@@ -47,7 +47,7 @@ def test_percentiles_ignore_zeros() -> None:
 
 
 def test_fan_in_and_churn_scaled() -> None:
-    cfg = GraspConfig(critical_path_patterns=[])
+    cfg = UnblurConfig(critical_path_patterns=[])
     paths = ["core.py", "leaf.py", "hot.py"]
     c = heuristic_criticality(paths, {"core.py": 20, "leaf.py": 1}, {"hot.py": 12}, cfg)
     assert c["core.py"].value == pytest.approx(0.8)
@@ -114,9 +114,9 @@ class FakeClient:
 
 
 def test_llm_double_opt_in() -> None:
-    assert not llm_allowed(GraspConfig(), {"GRASP_ALLOW_LLM_CODE": "true"})
-    assert not llm_allowed(GraspConfig(llm_criticality=True), {})
-    assert llm_allowed(GraspConfig(llm_criticality=True), {"GRASP_ALLOW_LLM_CODE": "true"})
+    assert not llm_allowed(UnblurConfig(), {"UNBLUR_ALLOW_LLM_CODE": "true"})
+    assert not llm_allowed(UnblurConfig(llm_criticality=True), {})
+    assert llm_allowed(UnblurConfig(llm_criticality=True), {"UNBLUR_ALLOW_LLM_CODE": "true"})
 
 
 def test_prompt_sends_minimum_context() -> None:
@@ -159,25 +159,25 @@ def test_classify_misconfigured_provider_stops_early() -> None:
 
 # ---- llm_client --------------------------------------------------------------------
 def test_get_client_providers() -> None:
-    c = get_client({"GRASP_LLM_PROVIDER": "gemini", "GRASP_LLM_API_KEY": "k"})
+    c = get_client({"UNBLUR_LLM_PROVIDER": "gemini", "UNBLUR_LLM_API_KEY": "k"})
     assert isinstance(c, GeminiClient) and c.model
     c2 = get_client(
         {
-            "GRASP_LLM_PROVIDER": "openai",
-            "GRASP_LLM_BASE_URL": "http://localhost:11434/v1",
-            "GRASP_LLM_MODEL": "llama3.2",
+            "UNBLUR_LLM_PROVIDER": "openai",
+            "UNBLUR_LLM_BASE_URL": "http://localhost:11434/v1",
+            "UNBLUR_LLM_MODEL": "llama3.2",
         }
     )
     assert isinstance(c2, OpenAICompatClient) and c2.api_key is None and c2.model == "llama3.2"
     assert get_client({}).provider == "anthropic"
     with pytest.raises(LlmError):
-        get_client({"GRASP_LLM_PROVIDER": "gemini"})
+        get_client({"UNBLUR_LLM_PROVIDER": "gemini"})
     with pytest.raises(LlmError):
-        get_client({"GRASP_LLM_PROVIDER": "nope"})
+        get_client({"UNBLUR_LLM_PROVIDER": "nope"})
 
 
 def test_http_providers_parse(monkeypatch: pytest.MonkeyPatch) -> None:
-    import grasp.llm_client as lc
+    import unblur.llm_client as lc
 
     seen: list[tuple[str, dict[str, Any], dict[str, str]]] = []
 

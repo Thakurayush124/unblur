@@ -74,7 +74,7 @@ export class GitHubClient {
         headers: {
           accept: "application/vnd.github+json",
           "x-github-api-version": "2022-11-28",
-          "user-agent": "grasp-comprehension-radar",
+          "user-agent": "unblur-comprehension-radar",
           ...(body !== undefined ? { "content-type": "application/json" } : {}),
           ...headers,
         },
