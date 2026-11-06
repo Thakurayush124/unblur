@@ -1,0 +1,16 @@
+.env
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+repos/
+*.grasp.json.tmp
+out*.json
+data/
+*.settings.json
+*.tsbuildinfo
+apps/web/test-results/
+apps/web/playwright-report/
