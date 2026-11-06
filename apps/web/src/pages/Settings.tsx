@@ -3,6 +3,9 @@ import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError, useApi, type Settings, type SettingsResponse } from "../api";
 import { useApp } from "../App";
 import { Card, Load, Notice, PageHeader } from "../components/ui";
+import { CHARACTERS, setGuide, useGuide } from "../guide/characters";
+import { Portrait } from "../guide/Portrait";
+import { useTour } from "../tour/Tour";
 
 type ListKey =
   | "aiTrailerPatterns"
@@ -266,6 +269,63 @@ export default function SettingsPage() {
         sub="Saved settings override the repo's .grasp.json and take effect on the next analysis run."
       />
       <Load state={state}>{(s) => <Editor key={key} initial={s} repoId={repoId} />}</Load>
+      <div className="mt-6">
+        <GuidePicker />
+      </div>
     </>
+  );
+}
+
+/** Which character guides the tour. A browser preference: applies at once, no Save needed. */
+function GuidePicker() {
+  const guide = useGuide();
+  const { start } = useTour();
+  return (
+    <Card title="Your guide" id="guide-h" variant="panel">
+      <fieldset>
+        <legend className="mb-3 text-sm text-ink-2">
+          Pick who walks you through Grasp. Saved in this browser.
+        </legend>
+        <div className="flex flex-wrap gap-3">
+          {CHARACTERS.map((c) => {
+            const checked = c.id === guide.id;
+            return (
+              <label
+                key={c.id}
+                className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border px-3 pb-2 pt-1 text-sm has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[var(--focus)] ${
+                  checked ? "border-accent bg-surface-2 font-semibold" : "border-line hover:border-rule"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="guide"
+                  value={c.id}
+                  checked={checked}
+                  onChange={() => setGuide(c.id)}
+                  className="sr-only"
+                />
+                <Portrait character={c} size={72} />
+                <span>{c.name}</span>
+                <span className="text-xs font-normal text-muted">{c.kind}</span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+      <button
+        type="button"
+        onClick={start}
+        className="mt-4 rounded-md border border-line px-3.5 py-2 text-sm hover:bg-surface-2"
+      >
+        Take the tour with {guide.name}
+      </button>
+      <p className="mt-4 text-xs text-muted">
+        Characters from{" "}
+        <a className="underline underline-offset-2" href="https://github.com/nilbuild/page-mascot">
+          page-mascot
+        </a>{" "}
+        by Kamran Ahmed (MIT).
+      </p>
+    </Card>
   );
 }

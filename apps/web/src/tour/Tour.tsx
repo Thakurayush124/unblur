@@ -11,7 +11,10 @@ import {
 } from "react";
 
 import { api, type Overview } from "../api";
-import { Mascot } from "../components/Mascot";
+import { Mascot } from "page-mascot";
+
+import { sheets, useGuide } from "../guide/characters";
+import { Portrait } from "../guide/Portrait";
 import { href, navigate, parse } from "../router";
 import { TOUR_STEPS, type TourStep } from "./steps";
 
@@ -147,6 +150,7 @@ function TourOverlay({
   const target = useRef<HTMLElement | null>(null);
   const nextBtn = useRef<HTMLButtonElement>(null);
   const last = index === total - 1;
+  const guide = useGuide();
 
   // Go to the step's page, find its section, bring it into view.
   useEffect(() => {
@@ -259,10 +263,16 @@ function TourOverlay({
         style={{ ...pos, pointerEvents: "auto" }}
       >
         <div className="flex gap-4">
-          <Mascot size={64} mood={step.mood} />
+          {/* page-mascot: follows the pointer, reacts when clicked ("booped") */}
+          <Mascot
+            {...sheets(guide.id)}
+            size={96}
+            label={`${guide.name} the ${guide.kind}`}
+            className="-ml-1 -mt-1"
+          />
           <div className="min-w-0">
             <h2 id={titleId} className="t-h2">
-              {step.title}
+              {step.title.replace("{name}", guide.name)}
             </h2>
             <p id={`${titleId}-body`} className="mt-1.5 text-[15px] leading-relaxed text-ink-2">
               {step.body}
@@ -307,20 +317,20 @@ function TourOverlay({
   );
 }
 
-/** Floating Hatch in the corner: restarts the tour. Hidden while the tour runs. */
+/** The guide in the corner: restarts the tour. Hidden (still mounted) while the tour runs. */
 export function TourLauncher() {
   const { active, start } = useTour();
-  // Stays mounted (just hidden) during the tour so focus can return to it afterwards.
+  const guide = useGuide();
   return (
     <button
       type="button"
       hidden={active}
       onClick={start}
-      aria-label="Take the guided tour with Hatch"
+      aria-label={`Take the guided tour with ${guide.name}`}
       title="Take the guided tour"
-      className="group fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full border border-line bg-surface py-1.5 pl-1.5 pr-4 shadow-[0_6px_24px_rgba(14,22,32,0.18)] hover:border-accent"
+      className="group fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-4 shadow-[0_6px_24px_rgba(14,22,32,0.18)] hover:border-accent"
     >
-      <Mascot size={40} mood="wave" />
+      <Portrait character={guide} size={44} />
       <span className="text-sm font-semibold">Guide</span>
     </button>
   );

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const TITLES = [
-  "Hi, I'm Hatch",
+  "Hi, I'm Ollie",
   "The numbers worth watching",
   "Is it getting better?",
   "Start with these files",
@@ -41,7 +41,7 @@ async function openDemo(page: Page, theme = "light") {
   );
 }
 
-test("first visit: Hatch walks through every section, then hands back control", async ({ page }) => {
+test("first visit: the guide walks through every section, then hands back control", async ({ page }) => {
   test.setTimeout(60_000);
   await openDemo(page);
   await page.goto("/");
@@ -67,28 +67,53 @@ test("first visit: Hatch walks through every section, then hands back control", 
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "Take the guided tour with Hatch" }).click();
-  await expect(page.getByRole("dialog").getByRole("heading", { name: "Hi, I'm Hatch" })).toBeVisible();
+  await page.getByRole("button", { name: "Take the guided tour with Ollie" }).click();
+  await expect(page.getByRole("dialog").getByRole("heading", { name: "Hi, I'm Ollie" })).toBeVisible();
 });
 
 test("keyboard: focus moves into the tour, arrows step, Esc closes and restores focus", async ({ page }) => {
   await openDemo(page, "dark");
   await page.goto("/");
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByRole("heading", { name: "Hi, I'm Hatch" })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Hi, I'm Ollie" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Next" })).toBeFocused();
   await page.keyboard.press("ArrowRight");
   await expect(dialog.getByRole("heading", { name: "The numbers worth watching" })).toBeVisible();
   await page.keyboard.press("ArrowLeft");
-  await expect(dialog.getByRole("heading", { name: "Hi, I'm Hatch" })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Hi, I'm Ollie" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
 
-  const launcher = page.getByRole("button", { name: "Take the guided tour with Hatch" });
+  const launcher = page.getByRole("button", { name: "Take the guided tour with Ollie" });
   await launcher.focus();
   await page.keyboard.press("Enter");
   await expect(dialog.getByRole("button", { name: "Skip tour" })).toBeVisible();
   await dialog.getByRole("button", { name: "Skip tour" }).click();
   await expect(dialog).toHaveCount(0);
   await expect(launcher).toBeFocused();
+});
+
+test("guide picker: choose another character, then the tour uses it", async ({ page }) => {
+  await openDemo(page);
+  await page.addInitScript(() => localStorage.setItem("grasp-tour-seen", "1"));
+  await page.goto("/#/settings");
+  const picker = page.getByRole("group", { name: /Pick who walks you through Grasp/ });
+  await expect(picker.getByRole("radio")).toHaveCount(6);
+  await expect(picker.getByRole("radio", { name: /Ollie/ })).toBeChecked();
+  await picker.getByText("Fenn").click();
+  await expect(picker.getByRole("radio", { name: /Fenn/ })).toBeChecked();
+  await expect(page.getByRole("button", { name: "Take the guided tour with Fenn" })).toBeVisible();
+  // the sprite sheet actually loads
+  const res = await page.request.get("/mascots/fox-directions.webp");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toContain("image/webp");
+
+  await page.getByRole("button", { name: "Take the tour with Fenn" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "Hi, I'm Fenn" })).toBeVisible();
+  // the interactive page-mascot character is in the panel and can be booped
+  await dialog.getByRole("button", { name: "Boop the Fenn the fox" }).click();
+  await expect(dialog.getByRole("heading", { name: "Hi, I'm Fenn" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Take the guided tour with Fenn" })).toBeVisible();
 });

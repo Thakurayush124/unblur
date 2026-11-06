@@ -136,17 +136,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Hatch waves once when it appears: the only unprompted motion in the app. */
-@keyframes mascot-wave {
-  0%, 100% { transform: rotate(0deg); }
-  30% { transform: rotate(-16deg); }
-  60% { transform: rotate(10deg); }
-}
-.mascot-wave {
-  transform-box: fill-box;
-  transform-origin: 0% 100%;
-  animation: mascot-wave 0.9s ease-in-out 1;
-}
+/* The tour panel fades in; nothing else moves on its own. */
 @keyframes tour-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
