@@ -36,6 +36,7 @@ export default function HeatmapPage({ module }: { module: string | null }) {
               }
             />
             <Card
+              tour="treemap"
               actions={
                 <div className="flex w-full flex-wrap items-center justify-between gap-3">
                   <RiskLegend />

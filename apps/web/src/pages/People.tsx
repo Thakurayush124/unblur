@@ -60,7 +60,7 @@ export default function PeoplePage() {
               <Notice>Every module has at least one active knowledge holder.</Notice>
             </div>
           )}
-          <Card>
+          <Card tour="coverage">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <caption className="sr-only">Knowledge holders per module, lowest bus factor first</caption>

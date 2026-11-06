@@ -65,7 +65,7 @@ function AddForm({ caps }: { caps: Capabilities }) {
   const busy = submitting || job?.status === "queued" || job?.status === "running";
   return (
     <div className="grid gap-6">
-      <Card variant="panel">
+      <Card variant="panel" tour="add-form">
         <form onSubmit={submit} className="grid gap-4" noValidate>
           <label className="text-sm">
             <span className="mb-1 block font-medium">Repository</span>
@@ -165,7 +165,7 @@ function GitHubPanel() {
   return (
     <Load state={status}>
       {(s) => (
-        <Card title="GitHub App" id="gh-h">
+        <Card title="GitHub App" id="gh-h" tour="github">
           {s.configured ? (
             <>
               <p className="text-sm text-ink-2">

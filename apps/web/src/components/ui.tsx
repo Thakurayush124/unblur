@@ -13,17 +13,20 @@ export function Card({
   actions,
   id,
   variant = "section",
+  tour,
 }: {
   title?: string;
   children: ReactNode;
   actions?: ReactNode;
   id?: string;
   variant?: "section" | "panel";
+  /** Anchor for the guided tour (data-tour). */
+  tour?: string;
 }) {
   const box =
     variant === "panel" ? "rounded-lg border border-line bg-surface p-5 sm:p-6" : "border-t border-rule pt-4";
   return (
-    <section aria-labelledby={title && id ? id : undefined} className={`min-w-0 ${box}`}>
+    <section aria-labelledby={title && id ? id : undefined} data-tour={tour} className={`min-w-0 ${box}`}>
       {(title || actions) && (
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
           {title && (

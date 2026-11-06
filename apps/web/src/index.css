@@ -136,6 +136,28 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Hatch waves once when it appears: the only unprompted motion in the app. */
+@keyframes mascot-wave {
+  0%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(-16deg); }
+  60% { transform: rotate(10deg); }
+}
+.mascot-wave {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: mascot-wave 0.9s ease-in-out 1;
+}
+@keyframes tour-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.tour-in {
+  animation: tour-in 0.18s ease-out;
+}
+.tour-spotlight {
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

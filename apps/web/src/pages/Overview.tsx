@@ -28,7 +28,7 @@ export default function OverviewPage() {
               <AnalyzeButton />
             </div>
 
-            <div className="mt-8 grid items-end gap-x-10 gap-y-6 md:grid-cols-[auto_1fr]">
+            <div data-tour="score" className="mt-8 grid items-end gap-x-10 gap-y-6 md:grid-cols-[auto_1fr]">
               <div>
                 <p className="text-sm text-ink-2">Comprehension</p>
                 <p className="t-hero tabular mt-1">
@@ -59,7 +59,7 @@ export default function OverviewPage() {
             </div>
           )}
 
-          <div className="mb-12">
+          <div className="mb-12" data-tour="figures">
             <Figures>
               <StatTile
                 label={`Files at risk ≥ ${o.riskThreshold}`}
@@ -92,12 +92,13 @@ export default function OverviewPage() {
           </div>
 
           <div className="grid gap-12">
-            <Card title="Trend" id="trend-h">
+            <Card title="Trend" id="trend-h" tour="trend">
               <TrendChart trend={o.trend} />
             </Card>
             <Card
               title="Top 10 riskiest files"
               id="top-h"
+              tour="riskiest"
               actions={
                 <a href={href("heatmap")} className="text-sm text-accent underline-offset-4 hover:underline">
                   Open the heatmap

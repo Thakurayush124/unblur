@@ -51,7 +51,7 @@ export default function FileDetailPage({ path }: { path: string }) {
             />
           </dl>
           <div className="grid gap-6 lg:grid-cols-2">
-            <Card title="Score breakdown" id="bd-h">
+            <Card title="Score breakdown" id="bd-h" tour="breakdown">
               {f.signals ? (
                 <Breakdown s={f.signals} w={f.weights} comprehension={f.comprehension ?? 0} />
               ) : (
@@ -136,7 +136,7 @@ export default function FileDetailPage({ path }: { path: string }) {
             </Card>
           </div>
           <div className="mt-6">
-            <Card title="AI evidence (commits that still own lines)" id="ev-h">
+            <Card title="AI evidence (commits that still own lines)" id="ev-h" tour="evidence">
               {f.aiSources.length === 0 ? (
                 <p className="text-sm text-muted">No AI-assisted lines detected.</p>
               ) : (

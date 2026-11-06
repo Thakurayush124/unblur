@@ -9,6 +9,7 @@ async function useRepo(page: Page, id: string, theme = "light") {
       localStorage.setItem("grasp-e2e-seeded", "1");
       localStorage.setItem("grasp-repo", repo!);
       localStorage.setItem("grasp-theme", t!);
+      localStorage.setItem("grasp-tour-seen", "1"); // the first-visit tour has its own spec
     },
     [id, theme],
   );

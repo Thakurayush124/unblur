@@ -21,6 +21,7 @@ for (const [name, url, theme] of shots) {
       ([id, t]) => {
         localStorage.setItem("grasp-repo", id!);
         localStorage.setItem("grasp-theme", t!);
+        localStorage.setItem("grasp-tour-seen", "1");
       },
       [demo.id, theme],
     );

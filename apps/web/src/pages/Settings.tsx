@@ -131,7 +131,7 @@ function Editor({ initial, repoId }: { initial: SettingsResponse; repoId: string
 
   return (
     <form onSubmit={onSubmit} className="grid gap-6" noValidate>
-      <Card title="Scoring weights" id="w-h" variant="panel">
+      <Card title="Scoring weights" id="w-h" variant="panel" tour="weights">
         <p className="mb-3 text-sm text-ink-2">
           comprehension = 100 × (w_a·(1−A) + w_r·R + w_h·(H·K) + w_e·E)
         </p>

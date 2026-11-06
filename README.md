@@ -77,6 +77,10 @@ npm run dev:web     # Vite dev server on :5173, proxies /api
 - **People**: knowledge coverage per module and the bus-factor-0 list. *No individual scores or rankings.*
 - **Settings**: weights, AI regexes, critical paths and the LLM opt-in, validated with Zod.
 
+- **Guided tour with Hatch**: on your first visit, Hatch (the mascot, a half-charted, half-hatched surveyor) walks you through every section in 11 short steps. It spotlights each part of the page and explains it in plain words. Select **Guide** in the corner to replay it. It works with the keyboard: Tab, then Enter, ← → to step, Esc to close.
+
+  ![Hatch guiding the tour](docs/screenshots/tour-step-1.png)
+
 Light and dark themes are both supported. With 5,000 files, the overview and the heatmap each load in under 600 ms (measured by the Playwright suite).
 
 ## GitHub App and PR guard
