@@ -16,21 +16,59 @@ Grasp measures **team understanding of code, not code quality**. It answers thre
 |---|---|---|
 | 1 | Local CLI ingestion: git log + blame, AI detection, AI line share | ✅ done |
 | 2 | Signals (review, human touch, retention), scoring, criticality, snapshots | ✅ done |
-| 3 | Dashboard | ⏳ |
+| 3 | Dashboard (overview, heatmap, file detail, people, settings) | ✅ done |
 | 4 | GitHub App + PR comprehension check | ⏳ |
 | 5 | Walkthroughs + quizzes (opt-in LLM) | ⏳ |
 
-## Quickstart (Phase 1, local CLI)
+## Quickstart
+
+### Demo in one command
 
 ```bash
-cd worker
-pip install -e ".[dev,mongo]"
-python scripts/demo_repo.py ../repos/demo          # optional synthetic repo
-python cli.py analyze ../repos/demo --json out.json
-python cli.py analyze /path/to/any/repo --since 365d --mongo-url mongodb://localhost:27017
+make demo        # or, without make:  npm install && npm run demo
 ```
 
-Re-running against the same `--json` file or Mongo database is **incremental**: only new commits are read, and only files changed since `lastAnalyzedSha` are re-blamed. Use `--full` to force a complete re-run.
+This builds a synthetic repo in `repos/demo`. It contains human-written code, AI-written code merged with rubber-stamp reviews, a contributor who has left, and a dependency bot. The script analyses the repo at five points in its history, writes the result to `data/demo.json`, and serves the dashboard at **http://localhost:4000**.
+
+### Analyse your own repo
+
+```bash
+pip install -e "worker[dev]"
+npm install && npm run build
+python worker/cli.py analyze /path/to/repo --since 365d --json data/myrepo.json
+node apps/api/dist/index.js          # serves every *.json in data/ on http://localhost:4000
+```
+
+Re-running against the same `--json` file is **incremental**: only new commits are read, and only files changed since `lastAnalyzedSha` are re-blamed. Pass `--full` to force a complete re-run. Settings you save in the dashboard go to `data/myrepo.json.settings.json`, and the worker applies them on its next run.
+
+### Docker (Mongo mode)
+
+```bash
+docker compose up -d mongo redis api web                  # dashboard on http://localhost:5173
+docker compose run --rm worker analyze /repos/<name>      # repos are mounted from ./repos (GRASP_REPOS_DIR)
+```
+
+### Development
+
+```bash
+npm run dev:api     # API on :4000, serves data/
+npm run dev:web     # Vite dev server on :5173, proxies /api
+```
+
+## Dashboard
+
+| | |
+|---|---|
+| ![Overview](docs/screenshots/overview.png) | ![Heatmap](docs/screenshots/heatmap.png) |
+| ![File detail](docs/screenshots/file-detail.png) | ![People](docs/screenshots/people.png) |
+
+- **Overview**: repo comprehension and risk, a trend line built from snapshots, and the top 10 riskiest files, each with a one-sentence explanation.
+- **Heatmap**: a treemap where size is LOC and colour is risk. Low risk is pale green, the middle is neutral gray and high risk is deep red. Lightness also changes with risk, so the scale stays readable with red-green colour blindness. Select a module to zoom in, then a file to open its detail page. Everything works by keyboard (Tab, then Enter), and a table view is available.
+- **File detail**: the score broken down into its A / R / H·K / E points, owners and whether they're active, the humans who have touched the file since the AI code landed, AI evidence per commit, and the reasons behind its criticality.
+- **People**: knowledge coverage per module and the bus-factor-0 list. *No individual scores or rankings.*
+- **Settings**: weights, AI regexes, critical paths and the LLM opt-in, validated with Zod.
+
+Light and dark themes are both supported. With 5,000 files, the overview and the heatmap each load in under 600 ms (measured by the Playwright suite).
 
 ## How AI-assisted lines are detected
 
@@ -105,11 +143,17 @@ Vendored, generated and binary files are skipped: the default ignore globs, bina
 
 By default **no source code leaves your machine**. LLM features are opt-in per repo, send the minimum context needed, and every call is logged to an audit collection (Phase 2+).
 
-## Development
+## Testing
 
 ```bash
-cd worker
-python -m pytest            # unit + fixture-repo tests
-python -m pytest -m slow -s # 50k-LOC performance test
-python -m ruff check . && python -m mypy grasp cli.py
+make test     # worker pytest (fixture repos) + API Vitest
+make e2e      # Playwright: smoke tests + 5k-file load check (uses Edge on Windows;
+              #             elsewhere run `npx playwright install chromium` once)
+make lint     # ruff + mypy + ESLint + Prettier + tsc
+cd worker && python -m pytest -m slow -s   # 50k-LOC worker performance test
 ```
+
+## Roadmap
+
+- **Phase 4**: a GitHub App that backfills PR and review data (so R is real) and adds a "Grasp: comprehension check" on PRs that touch high-risk files
+- **Phase 5**: walkthroughs and quizzes (opt-in LLM) that feed the verified-understanding signal E

@@ -56,6 +56,7 @@ class Demo:
         self.r = FixtureRepo(path)
         self.files: dict[str, str] = {}
         self.prs: list[PullRequest] = []
+        self.history: list[tuple[str, float]] = []  # (sha, days ago)
 
     def commit(
         self,
@@ -74,6 +75,7 @@ class Demo:
         changed = sum(c.count("\n") for c in files.values())
         self.files.update(files)
         sha = self.r.commit(msg, files, author=author, date=ago(days))
+        self.history.append((sha, days))
         if pr is None:
             return
         opened = NOW - timedelta(days=days + 1)
@@ -330,7 +332,18 @@ def main() -> int:
             raise SystemExit(f"refusing to delete {repo}: not a git repo")
         rmtree(repo)
     demo = build(repo)
-    result = analyze(repo, as_of=NOW, pull_requests=demo.prs)
+    # Analyse at a few points in history (oldest first) so the trend chart has data. Each run
+    # is incremental on the previous one, exactly like a nightly job would be.
+    result = None
+    checkpoints = [demo.history[i] for i in (4, 7, 10, 13)] + [demo.history[-1]]
+    for sha, days in checkpoints:
+        when = NOW - timedelta(days=max(0.0, days - 1))
+        r_git = demo.r
+        r_git._git("checkout", "-q", sha)
+        prs = [p for p in demo.prs if p.merged_at is None or p.merged_at <= when]
+        result = analyze(repo, as_of=when, pull_requests=prs, previous=result)
+    demo.r._git("checkout", "-q", "main")
+    result = analyze(repo, as_of=NOW, pull_requests=demo.prs, previous=result)
     json_store.save(result, out)
     s = result.snapshots[-1]
     print(f"demo repo: {repo}\nresults:   {out}")

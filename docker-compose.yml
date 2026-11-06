@@ -1,4 +1,3 @@
-# Phase 1: mongo + redis + worker. The api and web services are added in Phases 3-4.
 services:
   mongo:
     image: mongo:7
@@ -7,14 +6,27 @@ services:
   redis:
     image: redis:7-alpine
     ports: ["6379:6379"]
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    environment:
+      GRASP_MONGO_URL: mongodb://mongo:27017
+      GRASP_MONGO_DB: grasp
+    ports: ["4000:4000"]
+    depends_on: [mongo]
+  web:
+    build: { context: ., dockerfile: apps/web/Dockerfile }
+    environment:
+      GRASP_API_URL: http://api:4000
+    ports: ["5173:5173"]
+    depends_on: [api]
   worker:
     build: ./worker
-    env_file: .env
+    env_file: { path: .env, required: false }
     environment:
       GRASP_MONGO_URL: mongodb://mongo:27017
     volumes:
       - ${GRASP_REPOS_DIR:-./repos}:/repos:ro
     depends_on: [mongo, redis]
-    profiles: [cli]  # run on demand: docker compose run --rm worker analyze /repos/<name>
+    profiles: [cli] # run on demand: docker compose run --rm worker analyze /repos/<name>
 volumes:
   mongo-data:

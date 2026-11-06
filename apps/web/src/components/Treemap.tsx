@@ -107,7 +107,7 @@ export function Treemap({ modules, zoom }: { modules: HeatmapModule[]; zoom: str
                     stroke="var(--surface-1)"
                     strokeWidth={GAP}
                   />
-                  {m.w > 50 && (
+                  {m.w > 50 && m.h >= HEADER && (
                     <text x={m.x + 6} y={m.y + 14} fontSize={12} fontWeight={600} fill="var(--ink)">
                       {m.item.module.length * 7 > m.w - 50
                         ? `${m.item.module.slice(0, Math.max(3, Math.floor((m.w - 50) / 7)))}…`

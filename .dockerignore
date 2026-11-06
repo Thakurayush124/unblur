@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+data
+repos
+apps/web/e2e/.data
+apps/web/test-results
+worker/.venv
+**/__pycache__
+.git
