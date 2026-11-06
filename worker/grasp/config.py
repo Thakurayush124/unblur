@@ -15,7 +15,13 @@ DEFAULT_AI_TRAILER_PATTERNS = [
 ]
 DEFAULT_AI_MESSAGE_PATTERNS = [r"Generated with", "\N{ROBOT FACE}"]
 # Matched against "Name <email>" of the commit author.
+# Bots are non-human (excluded from knowledge/touch); only AI *agent* bots count as AI-written.
 DEFAULT_BOT_PATTERNS = [r"\[bot\]", r"noreply@anthropic\.com"]
+DEFAULT_AI_BOT_PATTERNS = [
+    r"(copilot|devin|claude|codex|cursor|gemini|openhands|sweep|jules|aider)[\w.-]*\[bot\]",
+    r"noreply@anthropic\.com",
+    r"^Copilot <\d+\+Copilot@users\.noreply\.github\.com>",
+]
 DEFAULT_IGNORE_GLOBS = [
     # directories (trailing slash = match any path segment)
     "node_modules/",
@@ -71,6 +77,7 @@ class GraspConfig(BaseModel):
     ai_trailer_patterns: list[str] = Field(default_factory=lambda: list(DEFAULT_AI_TRAILER_PATTERNS))
     ai_message_patterns: list[str] = Field(default_factory=lambda: list(DEFAULT_AI_MESSAGE_PATTERNS))
     bot_patterns: list[str] = Field(default_factory=lambda: list(DEFAULT_BOT_PATTERNS))
+    ai_bot_patterns: list[str] = Field(default_factory=lambda: list(DEFAULT_AI_BOT_PATTERNS))
     ai_pr_labels: list[str] = Field(default_factory=lambda: ["ai-generated"])
     ignore_globs: list[str] = Field(default_factory=lambda: list(DEFAULT_IGNORE_GLOBS))
     # Files under one of these roots are grouped by their first sub-directory.

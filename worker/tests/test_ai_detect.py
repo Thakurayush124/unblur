@@ -56,12 +56,24 @@ def test_custom_regex() -> None:
     assert d.evidence(_c("Generated with Claude Code")) == []
 
 
-def test_bot_author() -> None:
+def test_bot_authors() -> None:
     d = AiDetector(GraspConfig())
-    ev = d.evidence(_c("Bump", "dependabot[bot]", "49699333+dependabot[bot]@users.noreply.github.com"))
-    assert ev and ev[0].startswith("bot author:")
-    assert d.evidence(_c("x", "Claude", "noreply@anthropic.com"))
+    # Dependency / CI bots are non-human but NOT AI-written
+    dep = ("dependabot[bot]", "49699333+dependabot[bot]@users.noreply.github.com")
+    assert d.is_bot(*dep) and d.evidence(_c("Bump", *dep)) == []
+    assert d.is_bot("pre-commit-ci[bot]", "66853113+pre-commit-ci[bot]@users.noreply.github.com")
+    # AI coding agents are both
+    for agent in [
+        ("copilot-swe-agent[bot]", "198982749+copilot-swe-agent[bot]@users.noreply.github.com"),
+        ("devin-ai-integration[bot]", "158243242+devin-ai-integration[bot]@users.noreply.github.com"),
+        ("Copilot", "198982749+Copilot@users.noreply.github.com"),
+        ("Claude", "noreply@anthropic.com"),
+    ]:
+        assert d.is_bot(*agent)
+        ev = d.evidence(_c("x", *agent))
+        assert ev and ev[0].startswith("AI agent author:"), agent
     # GitHub web-UI commits by humans also use users.noreply.github.com: not a bot
+    assert not d.is_bot("Alice", "123+alice@users.noreply.github.com")
     assert d.evidence(_c("x", "Alice", "123+alice@users.noreply.github.com")) == []
 
 

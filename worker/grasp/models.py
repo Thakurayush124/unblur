@@ -18,6 +18,7 @@ class Repo(_Doc):
     name: str
     source: Literal["local", "github"] = "local"
     path: str | None = None
+    remote_url: str | None = None
     github_installation_id: int | None = None
     default_branch: str
     last_analyzed_at: datetime | None = None

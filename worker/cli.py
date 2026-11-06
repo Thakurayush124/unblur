@@ -14,7 +14,9 @@ from pathlib import Path
 from types import ModuleType
 
 from grasp.config import GraspConfig
+from grasp.gitutil import GitError, git
 from grasp.ingest.commits import parse_since
+from grasp.ingest.source import ensure_clone, is_remote, slug_for, validate_remote
 from grasp.models import AnalysisResult, PullRequest
 from grasp.pipeline import analyze
 from grasp.store import json_store
@@ -58,13 +60,25 @@ def _summary(result: AnalysisResult, top: int) -> str:
     return "\n".join(lines)
 
 
+def _progress(msg: str) -> None:
+    # Machine-readable progress on stderr (the API shows the latest line while a job runs).
+    print(f"[grasp] {msg}", file=sys.stderr, flush=True)
+
+
 def main(argv: list[str] | None = None) -> int:
+    root = Path(__file__).resolve().parents[1]
     ap = argparse.ArgumentParser(prog="grasp")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    a = sub.add_parser("analyze", help="analyse a local git repository")
-    a.add_argument("repo_path")
+    a = sub.add_parser("analyze", help="analyse a git repository (local path or remote URL)")
+    a.add_argument("source", metavar="repo", help="local checkout path, or a git URL to clone")
     a.add_argument("--since", default=None, help="only ingest commits newer than e.g. 365d")
     a.add_argument("--json", dest="json_out", help="write results to this JSON file")
+    a.add_argument("--data-dir", help="write results to <data-dir>/<repo-slug>.json")
+    a.add_argument(
+        "--workdir",
+        default=os.environ.get("GRASP_WORKDIR", str(root / "repos")),
+        help="where remote URLs are cloned (default: <grasp>/repos)",
+    )
     a.add_argument("--mongo-url", default=os.environ.get("GRASP_MONGO_URL"))
     a.add_argument("--mongo-db", default=os.environ.get("GRASP_MONGO_DB", "grasp"))
     a.add_argument("--config", help="config JSON (default: <repo>/.grasp.json)")
@@ -74,28 +88,53 @@ def main(argv: list[str] | None = None) -> int:
     a.add_argument("--pr-data", help="JSON list of PullRequest docs (enables signal R locally)")
     args = ap.parse_args(argv)
 
+    try:
+        return _analyze(args)
+    except (ValueError, GitError, FileNotFoundError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+
+
+def _analyze(args: argparse.Namespace) -> int:
     as_of = datetime.fromisoformat(args.as_of) if args.as_of else None
 
+    remote_url: str | None = None
+    if is_remote(args.source):
+        remote_url = validate_remote(args.source)
+        repo_path = ensure_clone(remote_url, args.workdir, _progress)
+    else:
+        repo_path = Path(args.source).resolve()
+        if not repo_path.is_dir():
+            raise FileNotFoundError(f"no such directory: {repo_path}")
+        try:
+            git(repo_path, "rev-parse", "--verify", "--quiet", "HEAD")
+        except GitError as e:
+            raise ValueError(f"{repo_path} is not a git repository with at least one commit") from e
+
+    json_out = args.json_out
+    if not json_out and args.data_dir:
+        json_out = str(Path(args.data_dir) / f"{slug_for(remote_url or str(repo_path))}.json")
+
     mongo: ModuleType | None = None
-    if args.mongo_url and not args.json_out:
+    if args.mongo_url and not json_out:
         from grasp.store import mongo_store
 
         mongo = mongo_store
 
     # Settings saved from the dashboard override the repo's .grasp.json.
     overrides: dict[str, object] = {}
-    if args.json_out:
-        overrides = json_store.load_overrides(args.json_out)
+    if json_out:
+        overrides = json_store.load_overrides(json_out)
     elif mongo is not None:
-        overrides = mongo.load_overrides(args.mongo_url, args.repo_path, args.mongo_db)
-    cfg = GraspConfig.load(args.repo_path, args.config, overrides)
+        overrides = mongo.load_overrides(args.mongo_url, repo_path, args.mongo_db)
+    cfg = GraspConfig.load(repo_path, args.config, overrides)
 
     previous = None
     if not args.full:
-        if args.json_out:
-            previous = json_store.load(args.json_out, args.repo_path)
+        if json_out:
+            previous = json_store.load(json_out, repo_path)
         elif mongo is not None:
-            previous = mongo.load(args.mongo_url, args.repo_path, args.mongo_db)
+            previous = mongo.load(args.mongo_url, repo_path, args.mongo_db)
 
     prs = None
     if args.pr_data:
@@ -103,22 +142,27 @@ def main(argv: list[str] | None = None) -> int:
         prs = [PullRequest.model_validate(p) for p in raw]
 
     result = analyze(
-        args.repo_path,
+        repo_path,
         cfg,
         since_days=parse_since(args.since),
         as_of=as_of,
         previous=previous,
         pull_requests=prs,
+        remote_url=remote_url,
+        progress=_progress,
     )
-    if args.json_out:
-        json_store.save(result, args.json_out)
+    _progress("Saving results")
+    if json_out:
+        json_store.save(result, json_out)
     elif mongo is not None:
         # Mongo never re-reads llm_audit, so every entry in result.llm_audit is new.
         mongo.save(result, args.mongo_url, args.mongo_db)
 
     print(_summary(result, args.top))
-    if not args.json_out and mongo is None:
-        print("\n(no --json or --mongo-url given: results were not persisted)", file=sys.stderr)
+    if json_out:
+        print(f"\nresults: {json_out}")
+    elif mongo is None:
+        print("\n(no --json, --data-dir or --mongo-url given: results were not persisted)", file=sys.stderr)
     return 0
 
 

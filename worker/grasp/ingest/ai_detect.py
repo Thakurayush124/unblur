@@ -15,11 +15,18 @@ class AiDetector:
         self._trailers = [re.compile(p, flags) for p in cfg.ai_trailer_patterns]
         self._messages = [re.compile(p, flags) for p in cfg.ai_message_patterns]
         self._bots = [re.compile(p, re.IGNORECASE) for p in cfg.bot_patterns]
+        self._ai_bots = [re.compile(p, re.IGNORECASE) for p in cfg.ai_bot_patterns]
         self._labels = {label.lower() for label in cfg.ai_pr_labels}
 
     def is_bot(self, name: str, email: str) -> bool:
+        """Non-human account (dependency bots, CI, AI agents)."""
         ident = f"{name} <{email}>"
-        return any(p.search(ident) for p in self._bots)
+        return any(p.search(ident) for p in self._bots) or self.is_ai_agent(name, email)
+
+    def is_ai_agent(self, name: str, email: str) -> bool:
+        """Account that is itself an AI coding agent (its commits are AI-written)."""
+        ident = f"{name} <{email}>"
+        return any(p.search(ident) for p in self._ai_bots)
 
     def evidence(
         self,
@@ -36,8 +43,8 @@ class AiDetector:
         for p in self._messages:
             if p.search(commit.message):
                 found.append(f"message matches /{p.pattern}/")
-        if self.is_bot(commit.author_name, commit.author_email):
-            found.append(f"bot author: {commit.author_name} <{commit.author_email}>")
+        if self.is_ai_agent(commit.author_name, commit.author_email):
+            found.append(f"AI agent author: {commit.author_name} <{commit.author_email}>")
         pr = commit.pr_number
         if pr is not None and pr_labels:
             for label in pr_labels.get(pr, ()):

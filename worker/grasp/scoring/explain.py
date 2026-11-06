@@ -42,21 +42,32 @@ def explain(
     if review_available and review_note:
         parts.append(review_note)
 
-    since = "since" if has_ai else "in the window analysed"
     n = len(touchers)
-    if n == 0:
-        parts.append(f"no human has touched it {since}" if has_ai else "no human activity on record")
-    elif n == 1:
-        t = touchers[0]
-        if t.active:
-            parts.append(f"only one human, still active, has touched it {since}")
+    k = sum(1 for t in touchers if t.active)
+    if has_ai:
+        if n == 0:
+            parts.append("no human has touched it since")
+        elif n == 1:
+            t = touchers[0]
+            if t.active:
+                parts.append("only one human, still active, has touched it since")
+            else:
+                m = _months(as_of, last_active.get(t.contributor_id))
+                when = f"{m} month{'s' if m != 1 else ''} ago" if m else "recently"
+                parts.append(f"the only human who has touched it since left {when}")
         else:
-            m = _months(as_of, last_active.get(t.contributor_id))
-            when = f"{m} month{'s' if m != 1 else ''} ago" if m else "recently"
-            parts.append(f"the only human who has touched it {since} left {when}")
+            parts.append(f"{n} humans have touched it since ({k} still active)")
+    elif n == 0:
+        parts.append("no human activity on record")
+    elif k == 0:
+        parts.append(
+            f"none of the {n} people who worked on it are still active"
+            if n > 1
+            else "its only author has left"
+        )
     else:
-        k = sum(1 for t in touchers if t.active)
-        parts.append(f"{n} humans have touched it {since} ({k} still active)")
+        noun = "person" if n == 1 else "people"
+        parts.append(f"worked on by {n} {noun} ({k} still active)")
 
     if verified > 0:
         parts.append("understanding was verified via a learning task")

@@ -57,13 +57,13 @@ def heuristic_criticality(
         if fan_in.get(p, 0):
             c.bump(
                 cfg.fan_in_weight * fan_pct[p],
-                f"imported by {fan_in[p]} files (p{round(fan_pct[p] * 100)})",
+                f"imported by {fan_in[p]} files, p{round(fan_pct[p] * 100)}",
             )
         if churn.get(p, 0):
             n = churn[p]
             c.bump(
                 cfg.churn_weight * churn_pct[p],
-                f"{n} commit{'s' if n != 1 else ''} in {cfg.churn_days}d (p{round(churn_pct[p] * 100)})",
+                f"{n} commit{'s' if n != 1 else ''} in {cfg.churn_days}d, p{round(churn_pct[p] * 100)}",
             )
         c.value = round(min(1.0, c.value), 4)
         out[p] = c

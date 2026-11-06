@@ -82,8 +82,11 @@ def analyze(
     pull_requests: list[PullRequest] | None = None,
     llm_client_factory: Callable[[], LlmClient] | None = None,
     env: Mapping[str, str] | None = None,
+    remote_url: str | None = None,
+    progress: Callable[[str], None] | None = None,
 ) -> AnalysisResult:
     t0 = time.perf_counter()
+    say = progress or (lambda _msg: None)
     repo = Path(repo_path).resolve()
     cfg = cfg or GraspConfig.load(repo)
     as_of = as_of or datetime.now(UTC)
@@ -93,6 +96,7 @@ def analyze(
     tasks = previous.learning_tasks if previous else []
 
     # ---- commits (incremental when possible) --------------------------------
+    say("Reading commit history")
     raw: dict[str, RawCommit] = {}
     blame_cache: dict[str, dict[str, int]] = {}
     prev_sha = previous.repo.last_analyzed_sha if previous else None
@@ -110,6 +114,7 @@ def analyze(
     # ---- files + blame -------------------------------------------------------
     files, ignored = list_files(repo, head, cfg)
     to_blame = [f.path for f in files if f.path not in blame_cache]
+    say(f"Running git blame on {len(to_blame)} of {len(files)} files")
     blame_cache.update(blame_many(repo, head, to_blame, cfg.blame_workers))
     blame_cache = {f.path: blame_cache[f.path] for f in files}
 
@@ -180,6 +185,7 @@ def analyze(
     sha_to_pr = pr_index(prs, {sha: c.pr_number for sha, c in raw.items()})
 
     # ---- criticality (heuristics) --------------------------------------------
+    say("Scoring signals and criticality")
     paths = [f.path for f in files]
     path_set = set(paths)
     contents = read_blobs(repo, head, [p for p in paths if is_import_source(p)])
@@ -299,6 +305,7 @@ def analyze(
             name=repo.name,
             source="local",
             path=repo.as_posix(),
+            remote_url=remote_url or (previous.repo.remote_url if previous else None),
             default_branch=current_branch(repo),
             last_analyzed_at=as_of,
             last_analyzed_sha=head,
