@@ -8,5 +8,7 @@ export interface DataStore {
   /** Dashboard overrides only (not merged with the worker's config). */
   getSettings(repoId: string): Promise<Settings>;
   saveSettings(repoId: string, settings: Settings): Promise<void>;
+  /** JSON mode: the result file a re-analysis should overwrite. */
+  outputFor?(repoId: string): string | null;
   close?(): Promise<void>;
 }

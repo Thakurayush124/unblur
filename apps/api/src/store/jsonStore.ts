@@ -69,6 +69,7 @@ export class JsonStore implements DataStore {
         name: repo.name,
         source: repo.source,
         lastAnalyzedAt: repo.lastAnalyzedAt ?? null,
+        origin: repo.remoteUrl ?? repo.path ?? null,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -76,6 +77,10 @@ export class JsonStore implements DataStore {
   async load(repoId: string): Promise<RepoData | null> {
     await this.refresh();
     return this.cache.get(repoId)?.data ?? null;
+  }
+
+  outputFor(repoId: string): string | null {
+    return this.cache.get(repoId)?.file ?? null;
   }
 
   private settingsFile(repoId: string): string | null {

@@ -11,13 +11,16 @@ services:
     environment:
       GRASP_MONGO_URL: mongodb://mongo:27017
       GRASP_MONGO_DB: grasp
-    ports: ["4000:4000"]
+      HOST: 0.0.0.0
+      # The api image has no Python/git: analyse with the worker service instead (see README).
+      GRASP_JOBS: "off"
+    ports: ["127.0.0.1:4000:4000"]
     depends_on: [mongo]
   web:
     build: { context: ., dockerfile: apps/web/Dockerfile }
     environment:
       GRASP_API_URL: http://api:4000
-    ports: ["5173:5173"]
+    ports: ["127.0.0.1:5173:5173"]
     depends_on: [api]
   worker:
     build: ./worker

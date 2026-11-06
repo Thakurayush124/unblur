@@ -90,7 +90,13 @@ describe("HTTP API (JSON store)", () => {
     const { status, body } = await get("/repos");
     expect(status).toBe(200);
     expect(body).toEqual([
-      { id: "r_demo", name: "demo", source: "local", lastAnalyzedAt: "2026-11-01T00:00:00Z" },
+      {
+        id: "r_demo",
+        name: "demo",
+        source: "local",
+        lastAnalyzedAt: "2026-11-01T00:00:00Z",
+        origin: "/tmp/demo",
+      },
     ]);
   });
 

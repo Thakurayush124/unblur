@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import path from "node:path";
 
 async function useRepo(page: Page, id: string, theme = "light") {
   await page.addInitScript(
@@ -107,6 +108,33 @@ test.describe("demo repo", () => {
     expect(bg).toBe("rgb(13, 13, 13)");
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  });
+});
+
+test.describe("add repository", () => {
+  test("rejects an unsupported source with a clear message", async ({ page }) => {
+    await page.goto("/#/add");
+    await page.getByRole("textbox").fill("ftp://example.com/repo");
+    await page.getByRole("button", { name: "Analyse repository" }).click();
+    await expect(page.getByRole("alert")).toContainText("Unsupported URL");
+  });
+
+  test("analyses a local checkout end to end and opens its overview", async ({ page }) => {
+    test.setTimeout(60_000);
+    await page.goto("/#/add");
+    await expect(page.getByRole("heading", { level: 1, name: "Add a repository" })).toBeVisible();
+    await page.getByRole("textbox").fill(path.resolve("e2e/.data/sample-repo"));
+    await page.getByRole("button", { name: "Analyse repository" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "sample-repo" })).toBeVisible({
+      timeout: 45_000,
+    });
+    await expect(page.getByRole("combobox").first()).toHaveValue(/.+/);
+    await expect(page.getByRole("table", { name: "Ten riskiest files with explanations" })).toContainText(
+      "src/auth.py",
+    );
+    // re-analyse from the overview (incremental)
+    await page.getByRole("button", { name: "Re-analyse" }).click();
+    await expect(page.getByRole("button", { name: "Re-analyse" })).toBeEnabled({ timeout: 45_000 });
   });
 });
 

@@ -8,6 +8,7 @@ type ListKey =
   | "aiTrailerPatterns"
   | "aiMessagePatterns"
   | "botPatterns"
+  | "aiBotPatterns"
   | "aiPrLabels"
   | "ignoreGlobs"
   | "criticalPaths"
@@ -20,7 +21,16 @@ const LISTS: { key: ListKey; label: string; help: string }[] = [
     help: "Regexes matched against commit messages (case-insensitive, multiline).",
   },
   { key: "aiMessagePatterns", label: "AI message patterns", help: "Regexes such as Generated with or 🤖." },
-  { key: "botPatterns", label: "Bot author patterns", help: "Regexes matched against “Name <email>”." },
+  {
+    key: "botPatterns",
+    label: "Bot author patterns",
+    help: "Non-human accounts (dependency/CI bots), matched against “Name <email>”. Not counted as AI.",
+  },
+  {
+    key: "aiBotPatterns",
+    label: "AI agent author patterns",
+    help: "Bot accounts that are AI coding agents: their commits count as AI-written.",
+  },
   {
     key: "aiPrLabels",
     label: "AI PR labels",

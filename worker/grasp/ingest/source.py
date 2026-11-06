@@ -41,6 +41,13 @@ def slug_for(source: str) -> str:
     return f"{_clean(p.name)}-{digest}"
 
 
+def display_name(url: str) -> str:
+    """owner/repo for a remote URL (what people call the repo)."""
+    path = re.split(r"[:/]", url.strip().rstrip("/").split("://", 1)[-1], maxsplit=1)[-1]
+    parts = [p for p in path.removesuffix(".git").split("/") if p]
+    return "/".join(parts[-2:]) or url
+
+
 def ensure_clone(url: str, workdir: str | Path, progress: Callable[[str], None] = lambda _: None) -> Path:
     """Clone `url` into `workdir/<slug>`, or fetch and fast-forward an existing clone."""
     url = validate_remote(url)

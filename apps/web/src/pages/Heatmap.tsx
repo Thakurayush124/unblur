@@ -9,8 +9,8 @@ import { int, score } from "../format";
 import { fileHref, href } from "../router";
 
 export default function HeatmapPage({ module }: { module: string | null }) {
-  const { repoId } = useApp();
-  const state = useApi<{ modules: HeatmapModule[] }>(`/repos/${repoId}/heatmap`);
+  const { repoId, version } = useApp();
+  const state = useApi<{ modules: HeatmapModule[] }>(`/repos/${repoId}/heatmap`, version);
   const [asTable, setAsTable] = useState(false);
 
   return (

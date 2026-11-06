@@ -5,6 +5,7 @@ export interface Repo {
   name: string;
   source: "local" | "github";
   path?: string | null;
+  remoteUrl?: string | null;
   defaultBranch: string;
   lastAnalyzedAt?: string | null;
   lastAnalyzedSha?: string | null;
@@ -116,4 +117,6 @@ export interface RepoSummary {
   name: string;
   source: Repo["source"];
   lastAnalyzedAt: string | null;
+  /** What to re-analyse: the remote URL it was cloned from, else the local checkout path. */
+  origin: string | null;
 }

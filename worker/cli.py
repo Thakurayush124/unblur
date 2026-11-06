@@ -158,6 +158,7 @@ def _analyze(args: argparse.Namespace) -> int:
         # Mongo never re-reads llm_audit, so every entry in result.llm_audit is new.
         mongo.save(result, args.mongo_url, args.mongo_db)
 
+    _progress(f"repo-id {result.repo.id}")
     print(_summary(result, args.top))
     if json_out:
         print(f"\nresults: {json_out}")

@@ -7,6 +7,28 @@ export interface RepoSummary {
   name: string;
   source: "local" | "github";
   lastAnalyzedAt: string | null;
+  origin: string | null;
+}
+
+export interface Capabilities {
+  analyze: boolean;
+  addRepos: boolean;
+  localPaths: boolean;
+  reason: string | null;
+}
+
+export interface Job {
+  id: string;
+  source: string;
+  full: boolean;
+  status: "queued" | "running" | "succeeded" | "failed";
+  progress: string;
+  log: string[];
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  repoId: string | null;
+  error: string | null;
 }
 
 export interface FileRow {
@@ -122,6 +144,7 @@ export interface Settings {
   aiTrailerPatterns?: string[];
   aiMessagePatterns?: string[];
   botPatterns?: string[];
+  aiBotPatterns?: string[];
   aiPrLabels?: string[];
   ignoreGlobs?: string[];
   criticalPaths?: string[];
@@ -162,22 +185,60 @@ export async function api<T>(url: string, init?: RequestInit): Promise<T> {
 export type Loadable<T> =
   { status: "loading" } | { status: "error"; error: Error } | { status: "ok"; data: T };
 
-/** Fetch `url` (relative to /api) whenever it changes. `null` skips the request. */
-export function useApi<T>(url: string | null): Loadable<T> {
-  const [state, setState] = useState<Loadable<T>>({ status: "loading" });
+/** Fetch `url` (relative to /api) whenever it or `version` changes. `null` skips the request. */
+export function useApi<T>(url: string | null, version = 0): Loadable<T> {
+  const [state, setState] = useState<{ url: string | null; value: Loadable<T> }>({
+    url: null,
+    value: { status: "loading" },
+  });
   useEffect(() => {
     if (url === null) return;
     let live = true;
-    setState({ status: "loading" });
+    // Same URL refetched (e.g. after a re-analysis): keep showing the old data until new arrives.
+    setState((prev) =>
+      prev.url === url && prev.value.status === "ok" ? prev : { url, value: { status: "loading" } },
+    );
     api<T>(url).then(
-      (data) => live && setState({ status: "ok", data }),
-      (error: Error) => live && setState({ status: "error", error }),
+      (data) => live && setState({ url, value: { status: "ok", data } }),
+      (error: Error) => live && setState({ url, value: { status: "error", error } }),
     );
     return () => {
       live = false;
     };
-  }, [url]);
-  return state;
+  }, [url, version]);
+  return state.url === url ? state.value : { status: "loading" };
 }
 
 export const enc = encodeURIComponent;
+
+const ACTIVE: Job["status"][] = ["queued", "running"];
+
+/** Poll a job once a second until it finishes. */
+export function useJob(jobId: string | null, onFinish?: (job: Job) => void): Job | null {
+  const [job, setJob] = useState<Job | null>(null);
+  useEffect(() => {
+    if (!jobId) {
+      setJob(null);
+      return;
+    }
+    let live = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = async () => {
+      try {
+        const j = await api<Job>(`/jobs/${jobId}`);
+        if (!live) return;
+        setJob(j);
+        if (ACTIVE.includes(j.status)) timer = setTimeout(tick, 1000);
+        else onFinish?.(j);
+      } catch {
+        if (live) timer = setTimeout(tick, 2000);
+      }
+    };
+    void tick();
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [jobId]); // onFinish intentionally not a dependency
+  return job;
+}

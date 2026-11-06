@@ -26,6 +26,7 @@ from grasp.ingest.commits import RawCommit, read_commits_by_sha, read_log
 from grasp.ingest.contents import read_blobs
 from grasp.ingest.contributors import is_active, resolve
 from grasp.ingest.files import list_files, module_for
+from grasp.ingest.source import display_name
 from grasp.llm_client import LlmClient, get_client
 from grasp.models import (
     AiSource,
@@ -87,6 +88,7 @@ def analyze(
 ) -> AnalysisResult:
     t0 = time.perf_counter()
     say = progress or (lambda _msg: None)
+    remote_url = remote_url or (previous.repo.remote_url if previous else None)
     repo = Path(repo_path).resolve()
     cfg = cfg or GraspConfig.load(repo)
     as_of = as_of or datetime.now(UTC)
@@ -302,10 +304,10 @@ def analyze(
     return AnalysisResult(
         repo=Repo(
             _id=rid,
-            name=repo.name,
+            name=display_name(remote_url) if remote_url else repo.name,
             source="local",
             path=repo.as_posix(),
-            remote_url=remote_url or (previous.repo.remote_url if previous else None),
+            remote_url=remote_url,
             default_branch=current_branch(repo),
             last_analyzed_at=as_of,
             last_analyzed_sha=head,

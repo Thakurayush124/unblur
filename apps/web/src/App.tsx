@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { useApi, type RepoSummary } from "./api";
-import { Load, Notice } from "./components/ui";
+import { Load } from "./components/ui";
 import { ago } from "./format";
+import AddRepoPage from "./pages/AddRepo";
 import FileDetailPage from "./pages/FileDetail";
 import HeatmapPage from "./pages/Heatmap";
 import OverviewPage from "./pages/Overview";
@@ -14,8 +15,21 @@ import { useTheme, type ThemeChoice } from "./theme";
 interface Ctx {
   repoId: string;
   dark: boolean;
+  /** Bumped after a re-analysis so pages refetch. */
+  version: number;
+  refresh: () => void;
+  selectRepo: (id: string) => void;
+  reloadRepos: () => void;
 }
-const AppCtx = createContext<Ctx>({ repoId: "", dark: false });
+const noop = () => {};
+const AppCtx = createContext<Ctx>({
+  repoId: "",
+  dark: false,
+  version: 0,
+  refresh: noop,
+  selectRepo: noop,
+  reloadRepos: noop,
+});
 export const useApp = () => useContext(AppCtx);
 
 const NAV: { page: Page; label: string }[] = [
@@ -29,13 +43,29 @@ const REPO_KEY = "grasp-repo";
 export default function App() {
   const route = useRoute();
   const theme = useTheme();
-  const repos = useApi<RepoSummary[]>("/repos");
+  const [reposVersion, setReposVersion] = useState(0);
+  const [version, setVersion] = useState(0);
+  const repos = useApi<RepoSummary[]>("/repos", reposVersion);
   const [repoId, setRepoId] = useState(() => localStorage.getItem(REPO_KEY) ?? "");
+  // A repo selected right after it was added may not be in the (old) list yet: wait for it.
+  const pending = useRef<string | null>(null);
 
   useEffect(() => {
     if (repos.status !== "ok" || repos.data.length === 0) return;
-    if (!repos.data.some((r) => r.id === repoId)) setRepoId(repos.data[0]!.id);
+    const known = repos.data.some((r) => r.id === repoId);
+    if (known) pending.current = null;
+    else if (pending.current !== repoId) setRepoId(repos.data[0]!.id);
   }, [repos, repoId]);
+
+  const selectRepo = useCallback((id: string) => {
+    pending.current = id;
+    setRepoId(id);
+  }, []);
+  const reloadRepos = useCallback(() => setReposVersion((v) => v + 1), []);
+  const refresh = useCallback(() => {
+    setVersion((v) => v + 1);
+    setReposVersion((v) => v + 1);
+  }, []);
   useEffect(() => {
     if (repoId) localStorage.setItem(REPO_KEY, repoId);
   }, [repoId]);
@@ -44,7 +74,7 @@ export default function App() {
   const active = route.page === "file" ? "heatmap" : route.page;
 
   return (
-    <AppCtx.Provider value={{ repoId, dark: theme.dark }}>
+    <AppCtx.Provider value={{ repoId, dark: theme.dark, version, refresh, selectRepo, reloadRepos }}>
       <a
         href="#main"
         onClick={(e) => {
@@ -73,13 +103,13 @@ export default function App() {
               </a>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-3 text-sm">
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-3 text-sm">
             {repos.status === "ok" && repos.data.length > 0 && (
               <label className="flex items-center gap-2">
                 <span className="text-muted">Repo</span>
                 <select
                   value={repoId}
-                  onChange={(e) => setRepoId(e.target.value)}
+                  onChange={(e) => selectRepo(e.target.value)}
                   className="rounded-md border border-line bg-surface px-2 py-1"
                 >
                   {repos.data.map((r) => (
@@ -93,6 +123,13 @@ export default function App() {
             {current && (
               <span className="hidden text-muted md:inline">analysed {ago(current.lastAnalyzedAt)}</span>
             )}
+            <a
+              href={href("add")}
+              aria-current={route.page === "add" ? "page" : undefined}
+              className="rounded-md border border-line px-2.5 py-1 hover:bg-surface-2"
+            >
+              <span aria-hidden>+ </span>Add repo
+            </a>
             <label className="flex items-center gap-2">
               <span className="sr-only">Theme</span>
               <select
@@ -112,12 +149,8 @@ export default function App() {
       <main id="main" tabIndex={-1} className="mx-auto max-w-7xl px-4 py-6 outline-none">
         <Load state={repos}>
           {(list) =>
-            list.length === 0 ? (
-              <Notice tone="warn">
-                No analysed repositories yet. Run{" "}
-                <code>python worker/cli.py analyze &lt;repo&gt; --json data/&lt;name&gt;.json</code> or{" "}
-                <code>make demo</code>.
-              </Notice>
+            route.page === "add" || list.length === 0 ? (
+              <AddRepoPage />
             ) : !repoId ? null : (
               <>
                 {route.page === "overview" && <OverviewPage />}

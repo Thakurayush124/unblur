@@ -30,6 +30,7 @@ export const SettingsSchema = z
     aiTrailerPatterns: z.array(regex).max(50),
     aiMessagePatterns: z.array(regex).max(50),
     botPatterns: z.array(regex).max(50),
+    aiBotPatterns: z.array(regex).max(50),
     aiPrLabels: z.array(z.string().trim().min(1).max(100)).max(50),
     ignoreGlobs: z.array(glob).max(200),
     criticalPaths: z.array(glob).max(200),

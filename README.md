@@ -30,22 +30,31 @@ make demo        # or, without make:  npm install && npm run demo
 
 This builds a synthetic repo in `repos/demo`. It contains human-written code, AI-written code merged with rubber-stamp reviews, a contributor who has left, and a dependency bot. The script analyses the repo at five points in its history, writes the result to `data/demo.json`, and serves the dashboard at **http://localhost:4000**.
 
-### Analyse your own repo
+### Analyse any repository
+
+**From the dashboard:** click **+ Add repo** and paste a git URL (`https://github.com/owner/repo`, `git@host:owner/repo.git`, …) or the path of a local checkout. Grasp clones the repo into `repos/`, analyses it, and opens its overview. Clicking **Re-analyse** later fetches new commits and only re-blames files that changed.
+
+**From the command line:**
 
 ```bash
 pip install -e "worker[dev]"
-npm install && npm run build
-python worker/cli.py analyze /path/to/repo --since 365d --json data/myrepo.json
-node apps/api/dist/index.js          # serves every *.json in data/ on http://localhost:4000
+python worker/cli.py analyze https://github.com/pallets/click --data-dir data   # clone + analyse
+python worker/cli.py analyze /path/to/local/checkout --data-dir data            # local repo
+npm install && npm run build && node apps/api/dist/index.js                     # dashboard on :4000
 ```
 
-Re-running against the same `--json` file is **incremental**: only new commits are read, and only files changed since `lastAnalyzedSha` are re-blamed. Pass `--full` to force a complete re-run. Settings you save in the dashboard go to `data/myrepo.json.settings.json`, and the worker applies them on its next run.
+Results go to `data/<owner-repo>.json`. Re-running is **incremental**: remote repos are fetched, only new commits are read, and only changed files are re-blamed. Pass `--full` to force a complete re-run. Settings you save in the dashboard go to `data/<name>.json.settings.json`, and the worker applies them on the next run.
+
+Private repos work if your own git credentials (SSH key or credential helper) can clone them. Grasp never prompts for or stores credentials.
+
+> **Security:** the API can clone and run `git` on repos you submit, so it listens on `127.0.0.1` only. Don't expose it publicly. Set `GRASP_JOBS=off` to disable analysis from the dashboard, and `GRASP_ALLOW_LOCAL_PATHS=false` to accept git URLs only. URLs are validated, so option injection (`-o…`) and `ext::`/`file://` transports are refused, and the worker runs without a shell.
 
 ### Docker (Mongo mode)
 
 ```bash
-docker compose up -d mongo redis api web                  # dashboard on http://localhost:5173
-docker compose run --rm worker analyze /repos/<name>      # repos are mounted from ./repos (GRASP_REPOS_DIR)
+docker compose up -d mongo redis api web                          # dashboard on http://localhost:5173
+docker compose run --rm worker analyze https://github.com/owner/repo --workdir /tmp/clones
+docker compose run --rm worker analyze /repos/<name>              # local repos mounted from ./repos
 ```
 
 ### Development
@@ -76,7 +85,7 @@ Each line's current owner comes from `git blame --line-porcelain` at `HEAD`. A l
 
 - a `Co-Authored-By:` trailer naming Claude, Copilot, Cursor, Codex, Devin, Gemini or aider
 - a message matching `Generated with`, 🤖, or any of your own regexes
-- a bot author (`[bot]`, `noreply@anthropic.com`, configurable)
+- an AI agent author (`copilot-swe-agent[bot]`, `devin-ai-integration[bot]`, Claude, …; configurable `aiBotPatterns`). Dependency and CI bots such as dependabot and pre-commit-ci count as non-human but **not** as AI.
 - a PR label such as `ai-generated` (needs GitHub mode)
 
 `A = aiLines / totalLines` per file.

@@ -23,6 +23,18 @@ execFileSync(
   { stdio: "inherit" },
 );
 
+// ---- a small local git repo for the "add repository" flow ---------------------------------
+const sample = path.join(data, "sample-repo");
+mkdirSync(path.join(sample, "src"), { recursive: true });
+const git = (...args) => execFileSync("git", ["-C", sample, ...args], { stdio: "ignore" });
+git("init", "-q", "-b", "main");
+git("config", "user.name", "Sam Ple");
+git("config", "user.email", "sam@example.com");
+git("config", "commit.gpgsign", "false");
+writeFileSync(path.join(sample, "src", "auth.py"), "def login(user):\n    return True\n");
+git("add", "-A");
+git("commit", "-q", "-m", "Add login\n\nCo-Authored-By: Claude <noreply@anthropic.com>");
+
 // ---- synthetic 5k-file dataset (shape = worker JSON output) ----------------------------
 let seed = 42;
 const rand = () => (seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31;

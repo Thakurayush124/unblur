@@ -7,8 +7,8 @@ import { ago, date, int, pct, score } from "../format";
 import { href } from "../router";
 
 export default function FileDetailPage({ path }: { path: string }) {
-  const { repoId } = useApp();
-  const state = useApi<FileDetail>(path ? `/repos/${repoId}/file?path=${enc(path)}` : null);
+  const { repoId, version } = useApp();
+  const state = useApi<FileDetail>(path ? `/repos/${repoId}/file?path=${enc(path)}` : null, version);
   if (!path) return <Notice tone="error">No file selected.</Notice>;
   return (
     <Load state={state}>

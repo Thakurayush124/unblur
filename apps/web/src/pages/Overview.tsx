@@ -1,5 +1,6 @@
 import { useApi, type Overview } from "../api";
 import { useApp } from "../App";
+import { AnalyzeButton } from "../components/AnalyzeButton";
 import { FileTable } from "../components/FileTable";
 import { TrendChart } from "../components/TrendChart";
 import { Card, Load, Notice, PageHeader, StatTile } from "../components/ui";
@@ -7,14 +8,15 @@ import { date, int, pct, score } from "../format";
 import { href } from "../router";
 
 export default function OverviewPage() {
-  const { repoId } = useApp();
-  const state = useApi<Overview>(`/repos/${repoId}/overview`);
+  const { repoId, version } = useApp();
+  const state = useApi<Overview>(`/repos/${repoId}/overview`, version);
   return (
     <Load state={state}>
       {(o) => (
         <>
           <PageHeader
             title={o.repo.name}
+            actions={<AnalyzeButton />}
             sub={
               <>
                 Analysed {date(o.repo.lastAnalyzedAt)} at{" "}

@@ -89,11 +89,14 @@ export function Load<T>({ state, children }: { state: Loadable<T>; children: (da
   return <>{children(state.data)}</>;
 }
 
-export function PageHeader({ title, sub }: { title: string; sub?: ReactNode }) {
+export function PageHeader({ title, sub, actions }: { title: string; sub?: ReactNode; actions?: ReactNode }) {
   return (
-    <header className="mb-6">
-      <h1 className="text-2xl font-semibold [overflow-wrap:anywhere]">{title}</h1>
-      {sub && <p className="mt-1 text-sm text-ink-2">{sub}</p>}
+    <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-semibold [overflow-wrap:anywhere]">{title}</h1>
+        {sub && <p className="mt-1 text-sm text-ink-2">{sub}</p>}
+      </div>
+      {actions}
     </header>
   );
 }

@@ -42,6 +42,13 @@ def test_unsafe_or_local_rejected(bad: str) -> None:
         validate_remote(bad)
 
 
+def test_display_names() -> None:
+    from grasp.ingest.source import display_name
+
+    assert display_name("https://github.com/pallets/click.git") == "pallets/click"
+    assert display_name("git@github.com:owner/repo") == "owner/repo"
+
+
 def test_slugs() -> None:
     assert slug_for("https://github.com/pallets/click.git") == "pallets-click"
     assert slug_for("git@github.com:owner/my.repo.git") == "owner-my.repo"

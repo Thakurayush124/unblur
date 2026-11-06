@@ -24,8 +24,8 @@ function Names({ people, empty }: { people: Person[]; empty: string }) {
 
 /** Team view: knowledge coverage per module. Deliberately no per-person scores or rankings. */
 export default function PeoplePage() {
-  const { repoId } = useApp();
-  const state = useApi<Knowledge>(`/repos/${repoId}/people`);
+  const { repoId, version } = useApp();
+  const state = useApi<Knowledge>(`/repos/${repoId}/people`, version);
   return (
     <Load state={state}>
       {(k) => (

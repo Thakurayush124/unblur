@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 /** Tiny hash router: #/<page>?<query>. Hash routing works from any static host. */
-export type Page = "overview" | "heatmap" | "file" | "people" | "settings";
-const PAGES: Page[] = ["overview", "heatmap", "file", "people", "settings"];
+export type Page = "overview" | "heatmap" | "file" | "people" | "settings" | "add";
+const PAGES: Page[] = ["overview", "heatmap", "file", "people", "settings", "add"];
 
 export interface Route {
   page: Page;

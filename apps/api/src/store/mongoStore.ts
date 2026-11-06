@@ -24,7 +24,7 @@ export class MongoStore implements DataStore {
 
   async listRepos(): Promise<RepoSummary[]> {
     const repos = await this.col("repos")
-      .find({}, { projection: { name: 1, source: 1, lastAnalyzedAt: 1 } })
+      .find({}, { projection: { name: 1, source: 1, lastAnalyzedAt: 1, remoteUrl: 1, path: 1 } })
       .toArray();
     return repos
       .map((r) => ({
@@ -32,6 +32,7 @@ export class MongoStore implements DataStore {
         name: String(r.name),
         source: r.source === "github" ? ("github" as const) : ("local" as const),
         lastAnalyzedAt: r.lastAnalyzedAt ? new Date(r.lastAnalyzedAt as Date).toISOString() : null,
+        origin: (r.remoteUrl as string | undefined) ?? (r.path as string | undefined) ?? null,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
